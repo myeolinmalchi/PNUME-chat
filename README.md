@@ -8,7 +8,7 @@
 
 ## 서버 구조도
 
-![서버 구조도](./assets/server-architecture-diagram.png)
+![서버 구조도](./docs/server-architecture-diagram.png)
 
 ## 기술 스택
 

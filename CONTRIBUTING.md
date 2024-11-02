@@ -38,7 +38,7 @@
 
 ## 브랜치 전략
 
-![GitHub Flow](./assets/githubflow.png)
+![GitHub Flow](./docs/githubflow.png)
 
 변형된 [GitHub Flow](https://docs.github.com/ko/get-started/using-github/github-flow)를 따른다.
 - `main`: 모든 작업이 병합되고 최종적으로 배포되는 브랜치.
