@@ -44,7 +44,7 @@ detail_selectors = {
 }
 
 def get_detail(url_key: str, seq: int) -> Optional[News]:
-    """가장 최근에 올라온 게시글 seq 반환"""
+    """게시글 세부 정보 추출"""
     if url_key not in urls:
         return
 
