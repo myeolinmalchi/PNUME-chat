@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "backend"
+version = "0.1.0"
+description = ""
+authors = ["myeolinmalchi <rkd2274@pusan.ac.kr>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.4"
+uvicorn = "^0.32.0"
+openai = "^1.53.0"
+tiktoken = "^0.8.0"
+psycopg2-binary = "^2.9.10"
+beautifulsoup4 = "^4.12.3"
+requests = "^2.32.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
