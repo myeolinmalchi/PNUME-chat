@@ -1,7 +1,5 @@
 import textwrap
 from typing import List
-
-
 import psycopg2
 
 class VectorDB:
