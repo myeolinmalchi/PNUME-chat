@@ -7,18 +7,22 @@ myDB = DB(config["host"], config["port"], config["database"], config["user"], co
 client = OpenAI(api_key = config["openai_api_key"])
 
 extention_install_query = "CREATE EXTENSION vector;"
+enum_query = """CREATE TYPE set AS ENUM ('공지/학부', '공지/대학원', '공지/장학', '공지/홍보', '학부 소식', '언론 속 학부', '세미나', '취업정보');"""
+
+
 
 def create_table_query(table_name:str) -> str:
     """This function creates a table. The configuration of column is fixed."""
-    query = f"""CREATE TABLE public.{table_name}
+    query = f"""
+        CREATE TABLE public.{table_name}
         (pk_id SERIAL PRIMARY KEY,
-        notice_id INT NOT NULL, 
+        notice_id INT NOT NULL,
         title  VARCHAR NOT NULL,
         date   DATE    NOT NULL,
         writer VARCHAR  NOT  NULL,
         content VARCHAR NOT NULL,
+        category set  NOT  NULL,
         attached VARCHAR   NULL,
-        category VARCHAR    NULL,
         embedding vector(256)
         );
     """
@@ -29,20 +33,16 @@ def delete_table_query(table_name:str) -> str:
     query = f"DROP TABLE {table_name}"
     return query
 
-def insert_query(table_name:str, notice_id:int, title:str, date:str, writer:str, content:str, attached:str, category:str) -> str:
+def insert_query(table_name:str, notice_id:int, title:str, date:str, writer:str, content:str, category:str, attached:str) -> str:
     """"This function inserts a row in specified table.
         If there's no value for a parameter, set the parameter as string NULL."""
-    query = f"""INSERT INTO 	{table_name} (pk_id, notice_id, title, date, writer, content, attached, category, embedding)
-                VALUES 	(DEFAULT, '{notice_id}', '{title}', '{date}', '{writer}', '{content}', """
-    #from this line, optional parameters are added to query.
+    query = f"""INSERT INTO 	{table_name} (pk_id, notice_id, title, date, writer, content, category, attached, embedding)
+                VALUES 	(DEFAULT, '{notice_id}', '{title}', '{date}', '{writer}', '{content}', '{category}', """
+    #from this line, attached is added to query.
     if attached == "NULL":
         query += "NULL, "
     else:
         query += f"'{attached}', "
-    if category == "NULL":
-        query += "NULL, "
-    else:
-        query += f"'{category}', "
     #from this line, content is embedded into 256 dimensional vector and added to query. OpenAi embedding is used.
     embedding = get_embedding(content)
     query += f"vector('{embedding}')"
@@ -52,7 +52,7 @@ def insert_query(table_name:str, notice_id:int, title:str, date:str, writer:str,
 
 def vector_similarity_query(question_vector:list[float], limit:int) -> str:
     """This function retrieve rows with closest vector embedding within the number of limit."""
-    query = f"SELECT pk_id, notice_id, title, date, writer, content, attached, category FROM notice ORDER BY embedding <=> vector('{question_vector}') LIMIT {limit};"
+    query = f"SELECT pk_id, notice_id, title, date, writer, content, category, attached FROM notice ORDER BY embedding <=> vector('{question_vector}') LIMIT {limit};"
     return query
 
 def measure_similarity_query(question_vector:list[float], limit:int) -> str:
@@ -60,7 +60,7 @@ def measure_similarity_query(question_vector:list[float], limit:int) -> str:
     query = f"SELECT title, 1 - (embedding <=> '{question_vector}') AS cosine_similarity FROM notice ORDER BY (embedding <=> '{question_vector}') LIMIT {limit};"
     return query
 
-def get_similar_info(question:str) -> str:
+def get_similar_info_query(question:str) -> str:
     """This function turns the question in string format into embedding vector of 256 dimensions and find the most similar row of a table."""
     question_embedding = get_embedding(question)
     info = vector_similarity_query(question_embedding, 1)
