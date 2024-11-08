@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from bs4 import BeautifulSoup
 from common import afetch_all, fetch
-from models.News import News
+from models.Notice import Notice
 from news.urls import urls
 from markdownify import markdownify as md
 import re
@@ -59,12 +59,12 @@ def preprocess_text(text: str):
 
 
 def parse_detail(soup: BeautifulSoup):
-    result: News = {
+    result: Notice = {
         "title": "",
         "date": "",
         "author": "",
-        "attatchments": [],
-        "contents": "",
+        "attachments": [],
+        "content": "",
     }
 
     for key, selector in detail_selectors.items():
@@ -76,7 +76,7 @@ def parse_detail(soup: BeautifulSoup):
         for i in element.select("img"):
             i.extract()
 
-        if key == "attatchments":
+        if key == "attachments":
             temp = []
             anchors = element.select("a")
             for a in anchors:
@@ -84,7 +84,7 @@ def parse_detail(soup: BeautifulSoup):
 
             result[key] = temp
 
-        if key == "contents":
+        if key == "content":
             result[key] = preprocess_text(md(element.decode_contents()))
             continue
 
@@ -93,7 +93,7 @@ def parse_detail(soup: BeautifulSoup):
     return result
 
 
-def fetch_detail(url_key: str, seq: int) -> Optional[News]:
+def fetch_detail(url_key: str, seq: int) -> Optional[Notice]:
     """게시글 세부 정보 추출"""
     if url_key not in urls:
         return
@@ -107,7 +107,7 @@ def fetch_detail(url_key: str, seq: int) -> Optional[News]:
 
 async def afetch_details(
     url_key: str, st_seq: int, ed_seq: int
-) -> Optional[List[News]]:
+) -> Optional[List[Notice]]:
     if url_key not in urls:
         return
 
