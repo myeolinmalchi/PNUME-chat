@@ -4,7 +4,6 @@ from typing import List, Optional
 from requests import ReadTimeout, ConnectTimeout, HTTPError, Timeout, ConnectionError
 from aiohttp import ClientSession
 import aiohttp
-from bs4.dammit import EncodingDetector
 
 import requests
 
