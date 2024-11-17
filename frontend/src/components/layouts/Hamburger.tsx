@@ -1,13 +1,11 @@
-import { useEffect, useState } from 'react';
-import {
-  useHamburgerOpened,
-  useHamburgerAction,
-} from 'src/stores/hamburgerStore';
+import { useState } from 'react';
+import { useHamburgerAction } from 'src/stores/hamburgerStore';
 import { twMerge } from 'tailwind-merge';
 import signatureWhite from 'assets/images/signature-white.svg';
 
 import hamburgerClose from 'assets/images/icons/hamburger-close.svg';
 import newChat from 'assets/images/icons/new-chat.svg';
+import useHamburgerAnimation from 'hooks/useHamburgerAnimation';
 
 type ChatItemProps = {
   title: string;
@@ -24,10 +22,9 @@ const ChatItem = ({ title, date }: ChatItemProps) => {
 };
 
 const Hamburger = () => {
-  const opened = useHamburgerOpened();
   const { closeHamburger } = useHamburgerAction();
-  const [visible, setVisible] = useState(false);
-  const zIndex = visible ? 'z-10' : 'z-[-999]';
+  const { zIndex, opacity, translateX } = useHamburgerAnimation();
+
   const [chats] = useState(
     [...Array(30)].map(() => ({
       title: '기계공학과 11월 학사일정',
@@ -35,30 +32,20 @@ const Hamburger = () => {
     }))
   );
 
-  useEffect(() => {
-    if (opened) {
-      setVisible(true);
-      return;
-    }
-    setTimeout(() => {
-      setVisible(false);
-    }, 300);
-  }, [opened]);
-
   return (
     <>
       <div
         className={twMerge(
           'absolute w-[100%] h-[100%] top-0 bg-[rgba(25,25,25,0.50)] transition-[opacity] duration-300',
           zIndex,
-          opened ? 'opacity-100' : 'opacity-0'
+          opacity
         )}
       ></div>
       <div
         className={twMerge(
           'absolute w-[70%] top-0 right-0 h-[100%] bg-[#005AA9] z-[20] transition-all duration-300',
           'px-[20px] pt-[24px] pb-[36px] flex flex-col items-start justify-start gap-y-[36px]',
-          opened ? 'translate-x-0' : 'translate-x-[100%]'
+          translateX
         )}
       >
         <div className='flex items-center justify-between w-full'>
