@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  @font-face {
+    font-family: 'NotoSansKR';
+    src: url('../assets/fonts/NotoSansKR.ttf') format('truetype');
+  }
+}
