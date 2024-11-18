@@ -1,8 +1,17 @@
 import Header from './Header';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import SideNav from './SideNav';
+import { useHamburgerAction } from 'stores/hamburgerStore';
+import { useEffect } from 'react';
 
 const Layout = () => {
+  const { closeHamburger } = useHamburgerAction();
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    closeHamburger();
+  }, [pathname]);
+
   return (
     <div
       className={`
