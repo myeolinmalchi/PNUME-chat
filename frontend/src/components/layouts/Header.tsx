@@ -6,10 +6,10 @@ import { Link } from 'react-router-dom';
 const Header = () => {
   const { openHamburger } = useHamburgerAction();
   return (
-    <div className='fixed top-0 w-full px-[20px] bg-white flex items-center justify-between h-[77px]'>
+    <div className='fixed top-0 w-full px-5 bg-white flex items-center justify-between h-[60px]'>
       <Link to='/'>
         <img
-          className='w-[160px]'
+          className='w-[141px]'
           src={signature}
           alt='부산대학교 기계공학부'
         />
