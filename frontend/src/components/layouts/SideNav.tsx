@@ -15,13 +15,13 @@ type ChatItemProps = {
 const ChatItem = ({ title, date }: ChatItemProps) => {
   return (
     <div className='flex flex-col items-start justify-center gap-[4px] px-[12px] py-[8px] w-full rounded-[4px] bg-white'>
-      <span className='text-[#0075C9] text-[12px] font-[600]'>{title}</span>
-      <span className='text-[10px] text-[#929292] font-[400]'>{`${date}`}</span>
+      <span className='text-point-3 text-[12px] font-[600]'>{title}</span>
+      <span className='text-[10px] text-secondary font-[400]'>{`${date}`}</span>
     </div>
   );
 };
 
-const Hamburger = () => {
+const SideNav = () => {
   const { closeHamburger } = useHamburgerAction();
   const { zIndex, opacity, translateX } = useHamburgerAnimation();
 
@@ -43,7 +43,7 @@ const Hamburger = () => {
       ></div>
       <div
         className={twMerge(
-          'absolute w-[70%] top-0 right-0 h-[100%] bg-[#005AA9] z-[20] transition-all duration-300',
+          'absolute w-[70%] top-0 right-0 h-[100%] bg-point-1 z-[20] transition-all duration-300',
           'px-[20px] pt-[24px] pb-[36px] flex flex-col items-start justify-start gap-y-[36px]',
           translateX
         )}
@@ -67,4 +67,4 @@ const Hamburger = () => {
   );
 };
 
-export default Hamburger;
+export default SideNav;

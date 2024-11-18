@@ -1,6 +1,6 @@
 import Header from './Header';
 import { Outlet } from 'react-router-dom';
-import Hamburger from './Hamburger';
+import SideNav from './SideNav';
 
 const Layout = () => {
   return (
@@ -12,7 +12,7 @@ const Layout = () => {
         font-['NotoSansKR'] overflow-hidden
       `}
     >
-      <Hamburger />
+      <SideNav />
       <Header />
       <Outlet />
     </div>
