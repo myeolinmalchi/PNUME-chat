@@ -6,7 +6,7 @@ type ChatExampleType = {
 
 const ChatExample = ({ question }: ChatExampleType) => {
   return (
-    <button className='border-[1px] box-border border-[#005AA9] rounded-[20px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.20)] w-[calc(50%-6px)] aspect-[320/242] text-[12px] text-[#005AA9] flex items-center justify-center px-[18px] font-[500] leading-[16px] break-keep'>
+    <button className='border-[1px] box-border border-point-1 rounded-[20px] shadow-[0px_0px_4px_0px_rgba(0,0,0,0.20)] w-[calc(50%-6px)] aspect-[320/242] text-[12px] text-point-1 flex items-center justify-center px-[18px] font-[500] leading-[16px] break-keep'>
       {question}
     </button>
   );
