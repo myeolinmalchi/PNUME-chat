@@ -2,7 +2,19 @@
 export default {
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
   theme: {
+    screens: {
+      mobile: '640px',
+      tablet: '768px',
+      desktop: '1024px',
+    },
     extend: {
+      width: {
+        base: 'calc(100% - 40px)',
+        'base-mobile': 'calc(100% - 120px)',
+      },
+      maxWidth: {
+        main: '768px',
+      },
       colors: {
         point: {
           1: '#005AA9',
@@ -11,6 +23,7 @@ export default {
         },
         primary: '#000',
         secondary: '#929292',
+        third: '#F4F4F4',
       },
     },
   },

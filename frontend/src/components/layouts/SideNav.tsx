@@ -15,8 +15,8 @@ type ChatItemProps = {
 const ChatItem = ({ title, date }: ChatItemProps) => {
   return (
     <div className='flex flex-col items-start justify-center gap-[4px] px-[12px] py-[8px] w-full rounded-[4px] bg-white'>
-      <span className='text-point-3 text-[12px] font-[600]'>{title}</span>
-      <span className='text-[10px] text-secondary font-[400]'>{`${date}`}</span>
+      <span className='text-point-3 text-sm font-[600]'>{title}</span>
+      <span className='text-xs text-secondary font-[400]'>{`${date}`}</span>
     </div>
   );
 };
@@ -36,14 +36,14 @@ const SideNav = () => {
     <>
       <div
         className={twMerge(
-          'absolute w-[100%] h-[100%] top-0 bg-[rgba(25,25,25,0.50)] transition-[opacity] duration-300',
+          'absolute w-full h-[100%] top-0 bg-[rgba(25,25,25,0.50)] transition-[opacity] duration-300',
           zIndex,
           opacity
         )}
       ></div>
       <div
         className={twMerge(
-          'absolute w-[70%] top-0 right-0 h-[100%] bg-point-1 z-[20] transition-all duration-300',
+          'absolute w-[70%] max-w-[320px] top-0 right-0 h-[100%] bg-point-1 z-[20] transition-all duration-300',
           'px-[20px] pt-[24px] pb-[36px] flex flex-col items-start justify-start gap-y-[36px]',
           translateX
         )}

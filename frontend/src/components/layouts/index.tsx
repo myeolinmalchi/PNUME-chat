@@ -6,9 +6,10 @@ const Layout = () => {
   return (
     <div
       className={`
-        w-full max-w-[540px] h-[100vh] pt-[77px]
+        w-full h-svh pt-[77px] pb-[30px]
         bg-cover bg-center relative mx-auto
         flex flex-col items-center justify-start
+        desktop:justify-center
         font-['NotoSansKR'] overflow-hidden
       `}
     >

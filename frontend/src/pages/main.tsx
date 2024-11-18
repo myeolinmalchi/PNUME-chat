@@ -1,5 +1,5 @@
 import { ChatExample, Logo } from 'components/pages/main';
-import { ChatInputField } from 'components/common/chat';
+import { ChatInputField } from 'components/common';
 
 const chatExamples = [
   '부산대학교 기계공학부 학과 사무실 전화번호를 알려줘',
@@ -11,15 +11,13 @@ const chatExamples = [
 const Main = () => {
   return (
     <>
-      <div className='absolute w-full bottom-[30px] flex flex-col items-center'>
-        <Logo />
-        <ChatExample.Container>
-          {chatExamples.map((ex) => (
-            <ChatExample question={ex} />
-          ))}
-        </ChatExample.Container>
-        <ChatInputField />
-      </div>
+      <Logo />
+      <ChatExample.Container>
+        {chatExamples.map((ex) => (
+          <ChatExample question={ex} />
+        ))}
+      </ChatExample.Container>
+      <ChatInputField className='desktop:order-1 desktop:mt-0' />
     </>
   );
 };

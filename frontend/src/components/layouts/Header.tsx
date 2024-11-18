@@ -5,8 +5,8 @@ import { useHamburgerAction } from 'stores/hamburgerStore';
 const Header = () => {
   const { openHamburger } = useHamburgerAction();
   return (
-    <div className='absolute top-0 w-full px-[20px] py-[24px] bg-white flex items-center justify-between'>
-      <img className='w-[141px]' src={signature} alt='부산대학교 기계공학부' />
+    <div className='fixed top-0 w-full px-[20px] bg-white flex items-center justify-between h-[77px]'>
+      <img className='w-[160px]' src={signature} alt='부산대학교 기계공학부' />
       <button onClick={openHamburger}>
         <img src={hamburgerOpen} />
       </button>

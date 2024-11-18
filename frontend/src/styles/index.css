@@ -21,3 +21,9 @@
     /* Firefox */
   }
 }
+
+@layer components {
+  .main-content {
+    @apply w-base max-w-main mobile:w-base-mobile;
+  }
+}
