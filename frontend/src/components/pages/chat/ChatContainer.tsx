@@ -6,8 +6,8 @@ type ChatContainerProps = {
 
 const ChatContainer = ({ children }: ChatContainerProps) => {
   return (
-    <div className='w-full pt-[24px] flex-1 overflow-auto flex flex-col-reverse'>
-      <div className='main-content mx-auto flex flex-col gap-[12px] justify-end'>
+    <div className='w-full py-6 flex-1 overflow-auto flex flex-col-reverse'>
+      <div className='main-content mx-auto flex flex-col gap-3 justify-end'>
         {children}
       </div>
     </div>

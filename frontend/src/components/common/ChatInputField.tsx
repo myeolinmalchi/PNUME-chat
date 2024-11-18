@@ -19,7 +19,7 @@ const ChatInputField = ({ placeholder, className }: ChatInputField) => {
         className
       )}
     >
-      <div className='w-full h-[46px] rounded-[32px] border-[1px] border-[#005AA9] flex items-center justify-between pl-[18px] pr-[7px]'>
+      <div className='w-full h-[2.875rem] rounded-full border-[1px] border-[#005AA9] flex items-center justify-between pl-[18px] pr-[7px]'>
         <input
           className='outline-none text-base font-[400] text-primary placeholder:text-secondary w-[calc(100%-32px-12px)]'
           type='text'
