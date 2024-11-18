@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useHamburgerAction } from 'src/stores/hamburgerStore';
 import { twMerge } from 'tailwind-merge';
+import { Link } from 'react-router-dom';
 import signatureWhite from 'assets/images/signature-white.svg';
 
 import hamburgerClose from 'assets/images/icons/hamburger-close.svg';
@@ -14,10 +15,13 @@ type ChatItemProps = {
 
 const ChatItem = ({ title, date }: ChatItemProps) => {
   return (
-    <div className='flex flex-col items-start justify-center gap-[4px] px-[12px] py-[8px] w-full rounded-[4px] bg-white'>
+    <Link
+      to='/chats'
+      className='flex flex-col items-start justify-center gap-[4px] px-[12px] py-[8px] w-full rounded-[4px] bg-white'
+    >
       <span className='text-point-3 text-sm font-[600]'>{title}</span>
       <span className='text-xs text-secondary font-[400]'>{`${date}`}</span>
-    </div>
+    </Link>
   );
 };
 
@@ -35,6 +39,7 @@ const SideNav = () => {
   return (
     <>
       <div
+        onClick={closeHamburger}
         className={twMerge(
           'absolute w-full h-[100%] top-0 bg-[rgba(25,25,25,0.50)] transition-[opacity] duration-300',
           zIndex,
@@ -49,9 +54,9 @@ const SideNav = () => {
         )}
       >
         <div className='flex items-center justify-between w-full'>
-          <button>
+          <Link to='/'>
             <img src={newChat} />
-          </button>
+          </Link>
           <button onClick={closeHamburger}>
             <img src={hamburgerClose} />
           </button>
