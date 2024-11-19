@@ -1,5 +1,5 @@
 import sendButton from 'assets/images/icons/send-chat.svg';
-import sendButtonDisabled from 'assets/images/icons/send-chat-disabled.svg';
+//import sendButtonDisabled from 'assets/images/icons/send-chat-disabled.svg';
 import { useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
@@ -15,21 +15,24 @@ const ChatInputField = ({ placeholder, className }: ChatInputField) => {
   return (
     <div
       className={twMerge(
-        'main-content px-auto mt-[24px] desktop:order-2',
+        'main-content px-auto mt-[24px] desktop:order-2 ',
         className
       )}
     >
-      <div className='w-full h-[2.875rem] rounded-full border-[1px] border-[#005AA9] flex items-center justify-between pl-[18px] pr-[7px]'>
+      <div className='w-full h-[46px] rounded-full border-[1px] border-[#005AA9] flex items-center justify-between pl-[18px] pr-[7px] gap-[12px] bg-white shadow-[0px_0px_4px_0px_rgba(0,0,0,0.20)]'>
         <input
-          className='outline-none text-base font-[400] text-primary placeholder:text-secondary w-[calc(100%-32px-12px)]'
+          className='outline-none text-base font-[400] text-primary placeholder:text-secondary flex-1'
           type='text'
           placeholder={placeholder ?? '무엇을 도와드릴까요?'}
           onChange={(e) => setInput(e.target.value)}
         />
         <button disabled={!sendEnable}>
           <img
-            className='w-[32px] aspect-square'
-            src={sendEnable ? sendButton : sendButtonDisabled}
+            className={twMerge(
+              'w-[32px] aspect-square transition-opacity',
+              !sendEnable && 'opacity-60'
+            )}
+            src={sendButton}
           />
         </button>
       </div>
