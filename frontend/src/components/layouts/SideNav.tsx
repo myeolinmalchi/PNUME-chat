@@ -17,7 +17,7 @@ const ChatItem = ({ title, date }: ChatItemProps) => {
   return (
     <Link
       to='/chats'
-      className='flex flex-col items-start justify-center gap-[4px] px-[12px] py-[8px] w-full rounded-[4px] bg-white'
+      className='flex flex-col items-start justify-center gap-1.5 px-3 py-2.5 w-full rounded-[0.25rem] bg-white'
     >
       <span className='text-point-3 text-sm font-[600]'>{title}</span>
       <span className='text-xs text-secondary font-[400]'>{`${date}`}</span>
@@ -41,15 +41,15 @@ const SideNav = () => {
       <div
         onClick={closeHamburger}
         className={twMerge(
-          'absolute w-full h-[100%] top-0 bg-[rgba(25,25,25,0.50)] transition-[opacity] duration-300',
+          'absolute w-full h-full top-0 bg-[rgba(25,25,25,0.50)] transition-opacity duration-300',
           zIndex,
           opacity
         )}
       ></div>
       <div
         className={twMerge(
-          'absolute w-[70%] max-w-[320px] top-0 right-0 h-[100%] bg-point-1 z-[20] transition-all duration-300',
-          'px-[20px] pt-[24px] pb-[36px] flex flex-col items-start justify-start gap-y-[36px]',
+          'absolute w-[70%] max-w-[320px] top-0 right-0 h-full bg-point-1 z-20 transition-all duration-300',
+          'px-5 pt-6 pb-9 flex flex-col items-start justify-start gap-y-6',
           translateX
         )}
       >
@@ -61,7 +61,7 @@ const SideNav = () => {
             <img src={hamburgerClose} />
           </button>
         </div>
-        <div className='w-full flex flex-col items-start justify-start gap-[12px] flex-1 overflow-y-auto'>
+        <div className='w-full flex flex-col items-start justify-start gap-3 flex-1 overflow-y-auto'>
           {chats.map((chat) => (
             <ChatItem {...chat} />
           ))}
