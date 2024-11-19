@@ -9,7 +9,7 @@ export default {
     },
     extend: {
       width: {
-        base: 'calc(100% - 2rem)',
+        base: 'calc(100% - 2.5rem)',
         'base-mobile': 'calc(100% - 120px)',
       },
       maxWidth: {

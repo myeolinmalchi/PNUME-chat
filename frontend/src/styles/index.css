@@ -20,6 +20,12 @@
     scrollbar-width: none;
     /* Firefox */
   }
+
+  @media (max-width: 639px) {
+    html {
+      font-size: 87.5%;
+    }
+  }
 }
 
 @layer components {
