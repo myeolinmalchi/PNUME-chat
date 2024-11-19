@@ -2,23 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-point-1: rgba(0, 90, 169, 1);
+  --color-point-2: rgba(0, 90, 169, 0.8);
+  --color-point-3: rgba(0, 117, 201, 1);
+
+  --scrollbar-width: 0.75rem;
+}
+
 @layer base {
   @font-face {
     font-family: 'NotoSansKR';
     src: url('../assets/fonts/NotoSansKR.ttf') format('truetype');
-  }
-
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  *::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Hide scrollbar for IE, Edge and Firefox */
-  * {
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
   }
 
   @media (max-width: 639px) {
@@ -31,5 +26,35 @@
 @layer components {
   .main-content {
     @apply w-base max-w-main mobile:w-base-mobile;
+  }
+
+  @media (not (pointer: none)) and (not (pointer: coarse)) {
+    .chat-container {
+      padding-left: calc(var(--scrollbar-width) * 1);
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+      background: rgba(0, 90, 169, 0.1);
+      border-radius: 9999px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 90, 169, 0.3);
+    }
+
+    .chat-container::-webkit-scrollbar {
+      background: none;
+      width: var(--scrollbar-width);
+    }
+
+    .chat-container::-webkit-scrollbar-button:vertical:end:increment,
+    .chat-container::-webkit-scrollbar-button:vertical:end:decrement {
+      background: none;
+      height: 11.5px;
+    }
+
+    .chat-list::-webkit-scrollbar {
+      display: none;
+    }
   }
 }

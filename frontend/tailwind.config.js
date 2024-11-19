@@ -17,9 +17,9 @@ export default {
       },
       colors: {
         point: {
-          1: '#005AA9',
-          2: '#005AA9CC',
-          3: '#0075C9',
+          1: 'var(--color-point-1)',
+          2: 'var(--color-point-2)',
+          3: 'var(--color-point-3)',
         },
         primary: '#000',
         secondary: '#929292',
