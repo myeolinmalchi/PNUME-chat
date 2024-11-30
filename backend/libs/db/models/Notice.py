@@ -3,9 +3,9 @@ from sqlalchemy import Enum as SQLEnum
 from enum import Enum
 from pgvector.sqlalchemy import Vector
 from sqlalchemy.orm import relationship
-from common import N_DIM, Base
- 
- 
+from libs.db.common import N_DIM, Base
+
+
 class UrlEnum(Enum):
     hakbunotice = "공지/학부"
     gradnotice = "공지/대학원"
