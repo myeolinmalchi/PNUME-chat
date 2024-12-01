@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-fastapi = "^0.115.4"
+fastapi = {extras = ["standard"], version = "^0.115.5"}
 uvicorn = "^0.32.0"
 openai = "^1.53.0"
 tiktoken = "^0.8.0"
