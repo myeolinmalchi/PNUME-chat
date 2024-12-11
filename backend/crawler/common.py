@@ -36,7 +36,8 @@ async def afetch(
         async with semaphore:
             async with session.get(f"{domain}{_path}") as res:
                 if res.status == 200:
-                    html = await res.text()
+                    # html = await res.text(encoding="utf-8")
+                    html = await res.read()
                     soup = BeautifulSoup(html, "html.parser")
                     return soup
     except Exception as e:
