@@ -8,7 +8,7 @@ import os
 
 load_dotenv()
 
-N_DIM = 1024
+N_DIM, V_DIM = (1024, 250002)
 Base = declarative_base()
 
 session_context_var: ContextVar = ContextVar("db_session", default=None)
@@ -24,9 +24,9 @@ def get_engine() -> Engine:
         user = os.environ.get("DB_USER")
         pw = os.environ.get("DB_PASSWORD")
         host = os.environ.get("DB_HOST")
-        dbname = os.environ.get("DB_NAME")
+        db_name = os.environ.get("DB_NAME")
 
-        _engine = create_engine(f"{db_type}://{user}:{pw}@{host}/{dbname}")
+        _engine = create_engine(f"{db_type}://{user}:{pw}@{host}/{db_name}")
 
     return _engine
 
