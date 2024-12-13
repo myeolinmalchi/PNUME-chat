@@ -1,9 +1,9 @@
 from sqlalchemy import Column, Date, ForeignKey, Integer, String
 from sqlalchemy import Enum as SQLEnum
 from enum import Enum
-from pgvector.sqlalchemy import Vector
+from pgvector.sqlalchemy import Vector, SPARSEVEC
 from sqlalchemy.orm import relationship
-from libs.db.common import N_DIM, Base
+from libs.db.common import N_DIM, V_DIM, Base
 
 
 class UrlEnum(Enum):
@@ -18,7 +18,18 @@ class UrlEnum(Enum):
 
 
 class Notice(Base):
-    """게시판 게시글 데이터"""
+    """
+    공지 게시판의 게시글 정보를 저장하는 notice 테이블
+
+    Attributes:
+        title: 게시글 제목
+        title_vector: dense vector of the title
+        title_sparse_vector: sparse vector of the title
+
+        content: 게시글 내용
+        content_vector: dense vector of the content
+        content_sparse_vector: sparse vector of the content
+    """
 
     __tablename__ = "notice"
 
@@ -34,12 +45,14 @@ class Notice(Base):
 
     title_vector = Column(Vector(N_DIM))
     content_vector = Column(Vector(N_DIM))
+    title_sparse_vector = Column(SPARSEVEC(V_DIM))
+    content_sparse_vector = Column(SPARSEVEC(V_DIM))
 
     attachments = relationship("Attachment", back_populates="notice")
 
 
 class Attachment(Base):
-    """첨부파일"""
+    """게시글의 첨부파일 테이블"""
 
     __tablename__ = "notice_attachment"
 
