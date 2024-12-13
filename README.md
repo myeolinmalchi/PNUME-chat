@@ -22,6 +22,7 @@
 
 - [박준혁](https://github.com/JakeFRCSE)
 - [강민석](https://github.com/myeolinmalchi)
+- [박상훈](https://github.com/sanghunii)
 
 ## 버전 관리
 
