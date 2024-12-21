@@ -17,7 +17,7 @@ class UrlEnum(Enum):
     recruit = "취업정보"
 
 
-class Notice(Base):
+class NoticeModel(Base):
     """
     공지 게시판의 게시글 정보를 저장하는 notice 테이블
 
@@ -48,10 +48,10 @@ class Notice(Base):
     title_sparse_vector = Column(SPARSEVEC(V_DIM))
     content_sparse_vector = Column(SPARSEVEC(V_DIM))
 
-    attachments = relationship("Attachment", back_populates="notice")
+    attachments = relationship("AttachmentModel", back_populates="notice")
 
 
-class Attachment(Base):
+class AttachmentModel(Base):
     """게시글의 첨부파일 테이블"""
 
     __tablename__ = "notice_attachment"
