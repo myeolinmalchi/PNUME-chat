@@ -1,8 +1,10 @@
 from libs.db.models.Notice import Notice
 from libs.db.repositories.NoticeRepository import NoticeRepository
-import common
+from libs.db import common
 import os
 from dotenv import load_dotenv
+
+import openai
 
 load_dotenv()
 
@@ -11,6 +13,22 @@ user = os.environ.get("DB_USER")
 pw = os.environ.get("DB_PASSWORD")
 host = os.environ.get("DB_HOST")
 dbname = os.environ.get("DB_NAME")
+openai_key = os.environ.get("OPENAI_KEY")
+
+
+openai.api_key = openai_key
+
+def get_embedding(text, model="text-embedding-3-small"):
+    response = openai.Embedding.create(
+        input=text,
+        model=model,
+        dimensions=common.N_DIM
+    )
+    embedding = response['data'][0]['embedding']
+    return embedding
+
+question = "무슨 교육 관련 공지가 있었는데 뭔지 기억이 안 나"
+question_vector = get_embedding(question)
 
 
 class Retriever:
