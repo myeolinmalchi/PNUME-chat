@@ -1,24 +1,28 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import './reset.css'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import Layout from 'components/layouts'
+import 'styles/index.css';
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import Layout from 'components/layouts';
+import { Chat, Main } from 'src/pages';
 
 const router = createBrowserRouter([
   {
-    element: <Layout/>, 
+    element: <Layout />,
     children: [
       {
-        path: '/', 
-        element: <></>
-      }
-    ]
-  }
-])
+        path: '/',
+        element: <Main />,
+      },
+      {
+        path: '/chats',
+        element: <Chat />,
+      },
+    ],
+  },
+]);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router}/>
-  </StrictMode>,
-)
+    <RouterProvider router={router} />
+  </StrictMode>
+);
