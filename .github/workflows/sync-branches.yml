@@ -1,0 +1,35 @@
+name: Sync main to feature branches
+
+on: 
+  push: 
+    branches:
+      - main 
+
+jobs: 
+  branch-sync:
+    runs-on: ubuntu-latest 
+    steps: 
+      - name: Checkout code
+        uses: actions/checkout@v4     
+        with: 
+          fetch-depth: 0 
+
+      - name: Set up git 
+        run: | 
+          git config --global user.name 'myeolinmalchi'
+          git config --global user.email 'rkd2274@pusan.ac.kr'     
+          
+      - name: Get all feature branches
+        id: get-branches
+        run: |
+          git fetch --all
+          git branch -r | grep 'origin/feature/' | sed 's/origin\///' > feature_branches.txt
+          echo "::set-output name=branches::$(cat feature_branches.txt | tr '\n' ' ')"
+
+      - name: Push changes to all feature branches
+        run: |
+          for branch in ${{ steps.get-branches.outputs.branches }}; do
+            git checkout $branch
+            git merge main -X theirs || git merge --abort
+            git push origin $branch
+          done
