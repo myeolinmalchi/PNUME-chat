@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["myeolinmalchi <rkd2274@pusan.ac.kr>"]
 readme = "README.md"
+packages = [{ include = "**/*" }]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -14,6 +15,11 @@ tiktoken = "^0.8.0"
 psycopg2-binary = "^2.9.10"
 beautifulsoup4 = "^4.12.3"
 requests = "^2.32.3"
+aiohttp = "^3.10.10"
+markdownify = "^0.13.1"
+pgvector = "^0.3.6"
+sqlalchemy = "^2.0.36"
+python-dotenv = "^1.0.1"
 
 
 [build-system]
