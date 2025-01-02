@@ -1,12 +1,9 @@
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from contextvars import ContextVar
-from sqlalchemy.ext.declarative import declarative_base
 
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
+from sqlalchemy.orm import declarative_base
 
 N_DIM, V_DIM = (1024, 250002)
 Base = declarative_base()

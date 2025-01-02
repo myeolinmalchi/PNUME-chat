@@ -1,8 +1,8 @@
 from contextlib import contextmanager
 from functools import wraps
-from typing import Callable, Dict, Generic, Type, TypeVar, Any
+from typing import Callable, Dict, Generic, Type, TypeVar, Any, List
 from sqlalchemy.orm import Session
-from libs.db.common import get_session, session_context_var
+from db.common import get_session, session_context_var
 
 
 class TransactionalMetaclass(type):
@@ -39,7 +39,7 @@ class TransactionalMetaclass(type):
 ModelType = TypeVar("ModelType")
 
 
-class BaseRepository(Generic[ModelType], TransactionalMetaclass):
+class BaseRepository(Generic[ModelType], metaclass=TransactionalMetaclass):
     @property
     def session(self) -> Session:
         return session_context_var.get()
@@ -49,6 +49,12 @@ class BaseRepository(Generic[ModelType], TransactionalMetaclass):
         self.session.flush()
         self.session.refresh(instance)
         return instance
+
+    def create_all(self, instances: List[ModelType]) -> List[ModelType]:
+        self.session.add_all(instances)
+        self.session.flush()
+        self.session.refresh(instances)
+        return instances
 
     def update(self, instance: ModelType, data: Dict[str, Any]) -> ModelType:
         for key, value in data.items():
@@ -80,7 +86,9 @@ def transaction():
         savepoint = session.begin_nested()
         try:
             yield savepoint
-        except Exception:
+        except Exception as e:
+            print("Error has been occured")
+            print(e)
             savepoint.rollback()
         raise
     else:
@@ -90,7 +98,9 @@ def transaction():
             session.commit()
             session.close()
 
-        except Exception:
+        except Exception as e:
+            print("Error has been occured")
+            print(e)
             session.rollback()
             session.close()
 
