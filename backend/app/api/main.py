@@ -12,6 +12,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings
 from pydantic import Field, field_validator
+from typing import List, Dict
 
 
 app = FastAPI()
@@ -30,9 +31,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 ## bind DB
-## pydantic-settings.BaseSettings 써서 검증코드 
-class DBConfig(BaseSettings):
+class DBConfig(BaseSettings):   ##pydantic data validation
     DB_USER: str = Field(env = "db_user")
     DB_PASSWORD: str = Field(env = "db_password")
     DB_HOST: str = Field(env = "db_host")
@@ -54,20 +55,35 @@ engine = create_engine(SQLALCHEMY_DB_URL, echo=False)
 Base.metadata.bind = engine 
 
 
-##pydantic써서 requeset data로 받을 데이터형 설정
-class Item(BaseModel):
-    questionContents: str
+##pydantic으로 Input/Output validation 
+class Request(BaseModel):
+    previousQuestionAnswerPairs: List[Dict[str, str]]
+    questionContent: str
 
-
-
-@app.post("/question")
-async def question(item: Item):
-    """
-#일단 비동기 처리 신경쓰지 말고 한번에 하나의 질문만 받고 답한다고 생각하고 먼저 코드 구현.
-    1. client로 부터 질문을 받는다.
-    2. 받은 질문을 응답 생성 모델에 집어 넣는다.
-    3. 모델이 생성한 질문을 받아와서 프론트로 넘긴다. (return)
-    """
+class Response(BaseModel):
+    questionContent: str
+    answerContent: str
     
-    #inference
-    #return inference_result
+    
+
+
+
+
+
+##api 구현
+##fastapi는 pydantic model로 정의된 parameter를 request body에서 찾는다. 
+@app.post("/question", response_model=Response)
+async def question(request: Request):
+    previousContents: List = request.previousQuestionAnswerPairs ##이전 질의응답 list
+    question: str = request.questionContent  ##이번에 들어온 질문 
+
+    ##inference
+    answer: str = ##여기서 추론
+    
+    ##response data
+    response = {
+        "questionContent": question,
+        "answerContent": answer
+    }
+
+    return response
