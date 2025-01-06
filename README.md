@@ -1,22 +1,19 @@
 # ME 챗봇 프로젝트
 
-## 진행 방식
-
-- 프로젝트 진행도에 맞춰 개인적으로 학습 진행
-- 학습 내용은 개인 블로그 또는 github에 정리하여 업로드
-- 일주일에 최소 한 번 프로젝트 관련 회의 진행
-
-## 서버 구조도
-
-![서버 구조도](./docs/server-architecture-diagram.png)
+![UI](./docs/main_ui.png)
 
 ## 기술 스택
 
-- Frontend: React.js(TypeScript), React-Redux, TailwindCSS
-- Backend: FastAPI(gunicorn + uvicorn), LangChain
-- DB: PostgreSQL(+ pgvector)
+- Frontend: React.js(TS), Zustand, TailwindCSS
+- Backend: FastAPI, Celery, Redis
+- DB: PostgreSQL(+pgvector)
+- 텍스트 임베딩: [bge-m3](https://huggingface.co/BAAI/bge-m3), [Huggingface TEI](https://github.com/huggingface/text-embeddings-inference)
 - 대화 생성: [gpt-4o-mini](https://platform.openai.com/docs/models/gpt-4o-mini)
-- 텍스트 임베딩: [text-embedding-3-small](https://platform.openai.com/docs/models/embeddings)
+
+## 서버 구조도
+
+![Server Architecture Diagram](./docs/server-architecture-diagram.png)
+
 
 ## 멤버
 
