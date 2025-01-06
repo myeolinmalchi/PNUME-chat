@@ -1,38 +1,23 @@
+"""데이터베이스 초기화 스크립트
+
+Usage:
+    $ poetry run python3 scripts/init_db.py
+"""
+
+from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 from db.common import Base, get_engine
 from db.models import *
 
 
 def init_database():
-    """
-    db_type = "postgresql"
-    user = os.environ.get("DB_USER")
-    pw = os.environ.get("DB_PASSWORD")
-    host = os.environ.get("DB_HOST")
-    db_name = os.environ.get("DB_NAME")
-
-    engine = create_engine(f"{db_type}://{user}:{pw}@{host}/postgres")
-    """
-
     try:
-        """
-        inspector = inspect(engine)
-        databases = inspector.get_schema_names()
-
-        with engine.connect() as conn:
-            conn.execute(text(f"SET AUTOCOMMIT = ON;"))
-            conn.commit()
-            if db_name in databases:
-                conn.execute(text(f"DROP DATABASE IF EXISTS {db_name}"))
-            conn.execute(text(f"CREATE DATABASE {db_name}"))
-        """
-
         engine = get_engine()
-        """
         with engine.connect() as conn:
-            conn.execute(text(f"CREATE EXTENSION IF NOT EXISTS vector"))
+            conn.execute(text("DROP SCHEMA IF EXISTS public CASCADE;"))
+            conn.execute(text("CREATE SCHEMA public;"))
+            conn.execute(text("CREATE EXTENSION vector;"))
             conn.commit()
-        """
 
         Base.metadata.create_all(engine)
     except ProgrammingError as e:
