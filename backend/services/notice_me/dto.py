@@ -1,4 +1,4 @@
-from typing import TypedDict, List
+from typing import NotRequired, TypedDict, List, Optional
 
 
 class AttachmentDTO(TypedDict):
@@ -13,4 +13,4 @@ class NoticeMEDTO(TypedDict):
 
     date: str
     author: str
-    attachments: List[AttachmentDTO]
+    attachments: NotRequired[List[AttachmentDTO]]
