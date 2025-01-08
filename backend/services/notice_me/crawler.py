@@ -62,6 +62,8 @@ class NoticeMECrawler:
         """게시글 세부 정보 비동기 추출"""
         if url_key not in URLs:
             raise Exception("존재하지 않는 URL입니다.")
+        if ed_seq < st_seq:
+            raise Exception("'ed_seq' must be greater than or equal to 'st_seq'")
 
         path = URLs[url_key]["path"]
         db = URLs[url_key]["db"]
@@ -90,6 +92,7 @@ class NoticeMECrawler:
         total_title_embeddings: List[EmbedResult | None] = []
         total_content_embeddings: List[List[EmbedResult] | None] = []
 
+        to = seq - 1 if to == -1 else to
         for temp in range(seq, to, interval * -1):
             st, ed = temp - interval, temp
             notices = await self.afetch_details(url_key, st, ed)
@@ -98,7 +101,8 @@ class NoticeMECrawler:
             titles = [notice["title"] for notice in notices]
             contents = [notice["content"] for notice in notices]
 
-            async with aiohttp.ClientSession() as sess:
+            timeout = aiohttp.ClientTimeout(total=6000)
+            async with aiohttp.ClientSession(timeout=timeout) as sess:
                 semaphore = asyncio.Semaphore(2)
                 titles_coroutine = aembed_onnx(
                     session=sess,
