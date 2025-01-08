@@ -20,12 +20,36 @@ class EmbedResult(Dict):
 EmbedResponse = List[List[EmbedResult]] | List[EmbedResult] | EmbedResult
 
 
+@overload
 def embed_onnx(
-    texts: List[str],
+    texts: str, chunking: Literal[False], truncate: bool
+) -> Optional[EmbedResult]: ...
+
+
+@overload
+def embed_onnx(
+    texts: List[str], chunking: Literal[False], truncate: bool
+) -> Optional[EmbedResult]: ...
+
+
+@overload
+def embed_onnx(
+    texts: str, chunking: Literal[True], truncate: bool
+) -> Optional[List[EmbedResult]]: ...
+
+
+@overload
+def embed_onnx(
+    texts: List[str], chunking: Literal[True], truncate: bool
+) -> Optional[List[List[EmbedResult]]]: ...
+
+
+def embed_onnx(
+    texts: str | List[str],
+    chunking: bool = True,
+    truncate: bool = True,
 ) -> Optional[EmbedResponse]:
-    body = {
-        "inputs": texts,
-    }
+    body = {"inputs": texts, "chunking": chunking, "truncate": truncate}
     res = requests.post(f"{embed_url}/embed", json=body)
     if res.status_code == 200:
         data = res.json()
@@ -95,7 +119,3 @@ async def aembed_onnx(
             if res.status == 200:
                 data = await res.json()
                 return data
-            from pprint import pprint
-
-            pprint(f"status code: {res.status}")
-            pprint(await res.json())
