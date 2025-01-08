@@ -15,6 +15,9 @@ from pydantic import Field, field_validator
 from typing import List, Dict
 
 
+
+
+
 app = FastAPI()
 
 ##CORS
@@ -66,6 +69,9 @@ class Response(BaseModel):
     
     
 
+ ##openAI / gpt-4o-mini
+ 
+
 
 
 
@@ -76,11 +82,33 @@ class Response(BaseModel):
 async def question(request: Request):
     previousContents: List = request.previousQuestionAnswerPairs ##이전 질의응답 list
     question: str = request.questionContent  ##이번에 들어온 질문 
+"""
+    ##1. 유사도 검색 (retreival 변수로 받기)
+    ##이때 await사용 
+        ##유사도 검색을 위해서 우리는 hybrid search를 사용한다. 따라서 2개의 vector를 전해야 한다. 
+            ##a. sparse vector 
+            ##b. dense vector
+            ##즉 입력으로 들어온 question을 다음과 같이 만든다.
+            
+            question_vector {
+                'sparse': question을 sparse vector로 변환
+                'dense' : question을 dense vector로 embedding 
+            }
 
-    ##inference
-    answer: str = ##여기서 추론
+            retrevial = question_vector를 이용한 유사도 검색.
+            
+
+    ##2. [ request에 담겨온 questionContents, 유사도 검색 결과 - retreival, 이전 대화 내역들 - previousQuestionAnswerPairs ] 이러한 것들을 gpt-4o-mini한테 넘김 
+        ##여기서 function calling moudle사용
+        ##이렇게 생성한 응답은 answer변수로 받는다. 
+        ##libs/db/에 있음 
+    ##이때도 await사용 
     
+    ##3. answer을 response데이터 양식에 맞게 정제하고 담아서 front로 return  -> 이 구조는 밑에 짜놨음 / 1번 2번 하면 됨 ~_~ ㅎㅎ
+"""
     ##response data
+    
+
     response = {
         "questionContent": question,
         "answerContent": answer
