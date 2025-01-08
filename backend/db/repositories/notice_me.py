@@ -1,96 +1,125 @@
 from typing import Dict, List, Optional
 
+from pgvector.sqlalchemy import SparseVector
 from sqlalchemy import func
-from db.models import NoticeModel
+from db.models import NoticeModel, NoticeChunkModel
+from db.common import V_DIM
 from .base import BaseRepository
 
 
 class NoticeMERepository(BaseRepository[NoticeModel]):
-    def find_orderby_total_similarity(
+
+    def search_notices_title_hybrid(
         self,
-        query_encoding: List,
-        title_weight: float = 0.5,
-        threshold: float = 0.7,
+        query_vector: List[float],
+        query_sparse_vector: Dict[int, float],
+        lexical_ratio: float = 0.5,
         k: int = 5,
-    ):
-        """제목과 내용 혼합하여 유사도 검색"""
-        title_similarity = (
-            NoticeModel.title_vector.cosine_distance(query_encoding) * title_weight
-        )
-        content_similarity = NoticeModel.content_vector.cosine_distance(
-            query_encoding
-        ) * (1 - title_weight)
-        computed_col = (title_similarity + content_similarity).label("similarity")
-
-        return (
-            self.session.query(NoticeModel, computed_col)
-            .filter(computed_col > threshold)
-            .order_by("similarity")
-            .limit(k)
-            .all()
-        )
-
-    def find_orderby_title_similarity(
-        self, query_encoding: List, threshold: float = 0.7, k: int = 5
     ):
         """제목으로 유사도 검색"""
-        similarity = NoticeModel.title_vector.cosine_distance(query_encoding).label(
-            "similarity"
+        score_dense = 1 - NoticeModel.title_vector.cosine_distance(query_vector)
+        score_lexical = -1 * (
+            NoticeModel.title_sparse_vector.max_inner_product(
+                SparseVector(query_sparse_vector, V_DIM)
+            )
         )
-        return (
-            self.session.query(NoticeModel, similarity)
-            .filter(similarity > threshold)
-            .order_by("similarity")
-            .limit(k)
-            .all()
-        )
-
-    def find_orderby_content_similarity(
-        self, query_encoding: List, threshold: float = 0.7, k: int = 5
-    ) -> List[NoticeModel]:
-        """내용으로 유사도 검색"""
-        similarity = (
-            1 - func.cosine_distance(NoticeModel.content_vector, query_encoding)
-        ).label("similarity")
-        return (
-            self.session.query(NoticeModel)
-            .filter(similarity > threshold)
-            .order_by(similarity.desc())
-            .limit(k)
-            .all()
-        )
-
-    def search_orderby_weighted_sum(
-        self,
-        query_vector: Optional[List[float]] = None,
-        query_sparse_vector: Optional[List[Dict[str, float]]] = None,
-        lexical_ratio: float = 0.5,
-        title_ratio: float = 0.5,
-        k: int = 5,
-    ) -> List[NoticeModel]:
-        score_title_dense = 1 - func.cosine_distance(
-            NoticeModel.title_vector, query_vector
-        )
-        score_content_dense = 1 - func.cosine_distance(
-            NoticeModel.content_vector, query_vector
-        )
-        score_title_lexical = -1 * (
-            func.inner_product(NoticeModel.title_sparse_vector, query_sparse_vector)
-        )
-        score_content_lexical = -1 * (
-            func.inner_product(NoticeModel.content_sparse_vector, query_sparse_vector)
-        )
-        score_title = (score_title_lexical * lexical_ratio) + score_title_dense * (
-            1 - lexical_ratio
-        )
-        score_content = (
-            score_content_lexical * lexical_ratio
-        ) + score_content_dense * (1 - lexical_ratio)
-
         score = (
-            (score_title * title_ratio) + (score_content * (1 - title_ratio))
+            (score_lexical * lexical_ratio) + score_dense * (1 - lexical_ratio)
         ).label("score")
 
         query = self.session.query(NoticeModel).order_by(score.desc()).limit(k)
+
+        return query.all()
+
+    def search_notices_content_hybrid(
+        self,
+        query_vector: List[float],
+        query_sparse_vector: Dict[int, float],
+        lexical_ratio: float = 0.5,
+        k: int = 5,
+    ) -> List[NoticeModel]:
+        """내용으로 유사도 검색"""
+        score_dense = 1 - NoticeChunkModel.chunk_vector.cosine_distance(query_vector)
+        score_lexical = -1 * (
+            NoticeChunkModel.chunk_sparse_vector.max_inner_product(
+                SparseVector(query_sparse_vector, V_DIM)
+            )
+        )
+        score = func.max(
+            (score_lexical * lexical_ratio) + score_dense * (1 - lexical_ratio)
+        ).label("score")
+
+        query = (
+            self.session.query(NoticeModel)
+            .join(NoticeChunkModel, NoticeModel.id == NoticeChunkModel.notice_id)
+            .group_by(NoticeModel.id)
+            .order_by(score.desc())
+            .limit(k)
+        )
+
+        return query.all()
+
+    def search_notices_hybrid(
+        self,
+        dense_vector: Optional[List[float]] = None,
+        sparse_vector: Optional[Dict[int, float]] = None,
+        lexical_ratio: float = 0.5,
+        rrf_k: int = 60,
+        k: int = 5,
+    ):
+        score_dense_content = 1 - NoticeChunkModel.chunk_vector.cosine_distance(
+            dense_vector
+        )
+        score_lexical_content = -1 * (
+            NoticeChunkModel.chunk_sparse_vector.max_inner_product(
+                SparseVector(sparse_vector, V_DIM)
+            )
+        )
+        score_content = func.max(
+            (score_lexical_content * lexical_ratio)
+            + score_dense_content * (1 - lexical_ratio)
+        ).label("score_content")
+
+        rank_content = (
+            self.session.query(
+                NoticeModel.id,
+                func.row_number()
+                .over(order_by=score_content.desc())
+                .label("rank_content"),
+            )
+            .join(NoticeChunkModel, NoticeModel.id == NoticeChunkModel.notice_id)
+            .group_by(NoticeModel.id)
+            .order_by(score_content.desc())
+            .subquery()
+        )
+
+        score_dense_title = 1 - NoticeModel.title_vector.cosine_distance(dense_vector)
+        score_lexical_content = -1 * (
+            NoticeModel.title_sparse_vector.max_inner_product(
+                SparseVector(sparse_vector, V_DIM)
+            )
+        )
+        score_title = (
+            (score_lexical_content * lexical_ratio)
+            + score_dense_title * (1 - lexical_ratio)
+        ).label("score_title")
+
+        rank_title = self.session.query(
+            NoticeModel.id,
+            func.row_number().over(order_by=score_title.desc()).label("rank_title"),
+        ).subquery()
+
+        rrf_score = (
+            1 / (rrf_k + rank_content.c.rank_content)
+            + 1 / (rrf_k + rank_title.c.rank_title)
+        ).label("rrf_score")
+
+        query = (
+            self.session.query(NoticeModel, rrf_score)
+            .join(rank_content, NoticeModel.id == rank_content.c.id)
+            .join(rank_title, NoticeModel.id == rank_title.c.id)
+            .order_by(rrf_score.desc())
+            .limit(k)
+        )
 
         return query.all()
