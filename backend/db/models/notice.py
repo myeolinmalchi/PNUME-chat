@@ -1,9 +1,10 @@
-from sqlalchemy import Date, ForeignKey, Integer, String
+from sqlalchemy import Column, Date, ForeignKey, Integer, String
 from sqlalchemy import Enum as SQLEnum
-from enum import Enum
 from pgvector.sqlalchemy import Vector, SPARSEVEC
-from sqlalchemy.orm import mapped_column, relationship
-from db.database import N_DIM, V_DIM, Base
+from enum import Enum
+from sqlalchemy.orm import mapped_column, relationship, Mapped
+from db.common import N_DIM, V_DIM, Base
+from typing import List
 
 
 class UrlEnum(Enum):
@@ -18,45 +19,40 @@ class UrlEnum(Enum):
 
 
 class NoticeModel(Base):
-    """
-    공지 게시판의 게시글 정보를 저장하는 notice 테이블
-
-    Attributes:
-        title: 게시글 제목
-        title_vector: dense vector of the title
-        title_sparse_vector: sparse vector of the title
-        content: 게시글 내용
-    """
-
     __tablename__ = "notices"
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    key = mapped_column(Integer, unique=True)
+    seq = mapped_column(Integer, unique=True)
 
-    category = mapped_column(SQLEnum(UrlEnum, nullable=False))
+    category = Column(
+        SQLEnum(UrlEnum, values_callable=lambda obj: [e.value for e in obj]),
+        nullable=False,
+    )
 
-    title = mapped_column(String, nullable=False)
-    content = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    content: Mapped[str] = mapped_column(String, nullable=False)
     date = mapped_column(Date, nullable=False)
-    author = mapped_column(String, nullable=False)
+    author: Mapped[str] = mapped_column(String, nullable=False)
 
     title_vector = mapped_column(Vector(N_DIM))
     title_sparse_vector = mapped_column(SPARSEVEC(V_DIM))
 
-    attachments = relationship("AttachmentModel", back_populates="notice")
-    content_chunks = relationship("NoticeChunkModel", back_populates="notice")
+    attachments: Mapped[List["AttachmentModel"]] = relationship(back_populates="notice")
+    content_chunks: Mapped[List["NoticeChunkModel"]] = relationship(
+        back_populates="notice"
+    )
 
 
 class NoticeChunkModel(Base):
     __tablename__ = "notice_content_chunks"
 
     chunk_id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    notice_id = mapped_column(Integer, ForeignKey("notices.id"))
+    notice_id = mapped_column(ForeignKey("notices.id"))
     chunk_content = mapped_column(String, nullable=False)
     chunk_vector = mapped_column(Vector(N_DIM))
     chunk_sparse_vector = mapped_column(SPARSEVEC(dim=V_DIM))
 
-    notice = relationship("NoticeModel", back_populates="content_chunks")
+    notice: Mapped["NoticeModel"] = relationship(back_populates="content_chunks")
 
 
 class AttachmentModel(Base):
@@ -65,8 +61,8 @@ class AttachmentModel(Base):
     __tablename__ = "notice_attachments"
 
     attachment_id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    notice_id = mapped_column(Integer, ForeignKey("notices.id"))
+    notice_id = mapped_column(ForeignKey("notices.id"))
     name = mapped_column(String, nullable=False)
     url = mapped_column(String, nullable=False)
 
-    notice = relationship("NoticeModel", back_populates="attachments")
+    notice: Mapped["NoticeModel"] = relationship(back_populates="attachments")
