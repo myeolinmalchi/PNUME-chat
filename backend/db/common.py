@@ -1,6 +1,10 @@
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from contextvars import ContextVar
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 import os
 from sqlalchemy.orm import declarative_base
