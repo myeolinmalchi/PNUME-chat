@@ -1,4 +1,6 @@
-from typing import NotRequired, TypedDict, List, Optional
+from typing import NotRequired, Optional, TypedDict, List
+
+from utils.embed import EmbedResult
 
 
 class AttachmentDTO(TypedDict):
@@ -6,11 +8,21 @@ class AttachmentDTO(TypedDict):
     url: str | None
 
 
-class NoticeMEDTO(TypedDict):
-    seq: int
+class NoticeMEInfoDTO(TypedDict):
     title: str
     content: str
 
     date: str
     author: str
-    attachments: NotRequired[List[AttachmentDTO]]
+    attachments: Optional[List[AttachmentDTO]]
+
+
+class NoticeMEEmbeddingsDTO(TypedDict):
+    title_embeddings: EmbedResult
+    content_embeddings: List[EmbedResult]
+
+
+class NoticeMEDTO(TypedDict):
+    seq: int
+    info: NotRequired[NoticeMEInfoDTO]
+    embeddings: NotRequired[NoticeMEEmbeddingsDTO]
