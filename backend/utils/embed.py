@@ -1,10 +1,11 @@
 from typing import Dict, List, Literal, Optional, overload
-from asyncio.locks import Semaphore
 
 from aiohttp import ClientSession
 from dotenv import load_dotenv
 import requests
 import os
+
+from utils.semaphore import http_semaphore
 
 load_dotenv()
 
@@ -21,101 +22,97 @@ EmbedResponse = List[List[EmbedResult]] | List[EmbedResult] | EmbedResult
 
 
 @overload
-def embed_onnx(
-    texts: str, chunking: Literal[False], truncate: bool
-) -> Optional[EmbedResult]: ...
+def embed_onnx(texts: str, chunking: Literal[False], truncate: bool) -> EmbedResult: ...
 
 
 @overload
 def embed_onnx(
     texts: List[str], chunking: Literal[False], truncate: bool
-) -> Optional[EmbedResult]: ...
+) -> EmbedResult: ...
 
 
 @overload
 def embed_onnx(
     texts: str, chunking: Literal[True], truncate: bool
-) -> Optional[List[EmbedResult]]: ...
+) -> List[EmbedResult]: ...
 
 
 @overload
 def embed_onnx(
     texts: List[str], chunking: Literal[True], truncate: bool
-) -> Optional[List[List[EmbedResult]]]: ...
+) -> List[List[EmbedResult]]: ...
 
 
 def embed_onnx(
     texts: str | List[str],
     chunking: bool = True,
     truncate: bool = True,
-) -> Optional[EmbedResponse]:
+) -> EmbedResponse:
     body = {"inputs": texts, "chunking": chunking, "truncate": truncate}
     res = requests.post(f"{embed_url}/embed", json=body)
     if res.status_code == 200:
         data = res.json()
         return data
 
+    raise Exception("텍스트 임베딩에 실패했습니다.")
+
 
 @overload
 async def aembed_onnx(
-    session: ClientSession,
-    semaphore: Semaphore,
     texts: List[str],
-    chunking: Literal[True],
+    session: ClientSession,
+    chunking: Literal[True] = True,
     truncate: bool = True,
-) -> Optional[List[List[EmbedResult]]]: ...
+) -> List[List[EmbedResult]]: ...
 
 
 @overload
 async def aembed_onnx(
-    session: ClientSession,
-    semaphore: Semaphore,
     texts: List[str],
-    chunking: Literal[False],
+    session: ClientSession,
+    chunking: Literal[False] = False,
     truncate: bool = True,
-) -> Optional[List[EmbedResult]]: ...
+) -> List[EmbedResult]: ...
 
 
 @overload
 async def aembed_onnx(
-    session: ClientSession,
-    semaphore: Semaphore,
     texts: List[str],
-    chunking: Literal[False],
+    session: ClientSession,
+    chunking: Literal[False] = False,
     truncate: bool = True,
-) -> Optional[List[EmbedResult]]: ...
+) -> List[EmbedResult]: ...
 
 
 @overload
 async def aembed_onnx(
-    session: ClientSession,
-    semaphore: Semaphore,
     texts: str,
-    chunking: Literal[True],
+    session: ClientSession,
+    chunking: Literal[True] = True,
     truncate: bool = True,
-) -> Optional[List[EmbedResult]]: ...
+) -> List[EmbedResult]: ...
 
 
 @overload
 async def aembed_onnx(
-    session: ClientSession,
-    semaphore: Semaphore,
     texts: str,
-    chunking: Literal[False],
-    truncate: bool = True,
-) -> Optional[EmbedResult]: ...
-
-
-async def aembed_onnx(
     session: ClientSession,
-    semaphore: Semaphore,
+    chunking: Literal[False] = False,
+    truncate: bool = True,
+) -> EmbedResult: ...
+
+
+@http_semaphore()
+async def aembed_onnx(
     texts: str | List[str],
+    session: ClientSession,
     chunking: bool = True,
     truncate: bool = True,
-) -> Optional[EmbedResponse]:
-    async with semaphore:
-        body = {"inputs": texts, "chunking": chunking, "truncate": truncate}
-        async with session.post(f"{embed_url}/embed", json=body) as res:
-            if res.status == 200:
-                data = await res.json()
-                return data
+) -> EmbedResponse:
+    body = {"inputs": texts, "chunking": chunking, "truncate": truncate}
+    async with session.post(f"{embed_url}/embed", json=body) as res:
+        if res.status == 200:
+            data = await res.json()
+            return data
+
+        raise Exception("텍스트 임베딩에 실패했습니다.")
