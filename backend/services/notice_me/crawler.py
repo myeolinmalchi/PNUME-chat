@@ -1,14 +1,15 @@
 import asyncio
-from typing import Optional, List
+from typing import Dict, Optional
 
 import aiohttp
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
+from tqdm import tqdm
 
 from utils.scrape import scrape, ascrape_all
-from utils.embed import EmbedResult, aembed_onnx
+from utils.embed import aembed_onnx
 
-from .dto import NoticeMEDTO
+from .dto import NoticeMEDTO, NoticeMEInfoDTO
 
 import re
 
@@ -58,7 +59,7 @@ class NoticeMECrawler:
 
     async def afetch_details(
         self, url_key: str, st_seq: int, ed_seq: int
-    ) -> List[Optional[NoticeMEDTO]]:
+    ) -> Dict[int, NoticeMEDTO]:
         """게시글 세부 정보 비동기 추출"""
         if url_key not in URLs:
             raise Exception("존재하지 않는 URL입니다.")
@@ -74,69 +75,71 @@ class NoticeMECrawler:
         ]
 
         soups = await ascrape_all(_urls, 30)
+        soups = [soup for soup in soups if soup is not None]
         loop = asyncio.get_running_loop()
         tasks = [
             loop.run_in_executor(None, self._parse_detail, seq, soup)
-            for seq, soup in zip(range(st_seq, ed_seq + 1), soups)
-            if soup is not None
+            for seq, soup in enumerate(soups, st_seq)
         ]
+        notices = await asyncio.gather(*tasks)
+        notices = {notice["seq"]: notice for notice in notices}
 
-        return await asyncio.gather(*tasks)
+        return notices
 
-    async def ascrape_all(self, url_key: str, interval: int, to: int = 1):
+    async def aembed_notice(
+        self, notices: Dict[int, NoticeMEDTO]
+    ) -> Dict[int, NoticeMEDTO]:
+        infos = [notice["info"] for notice in notices.values() if "info" in notice]
+        titles = [info["title"] for info in infos]
+        contents = [info["content"] for info in infos]
+
+        timeout = aiohttp.ClientTimeout(total=3000)
+        async with aiohttp.ClientSession(timeout=timeout) as sess:
+            titles_coroutine = aembed_onnx(
+                session=sess,
+                texts=titles,
+                chunking=False,
+                truncate=True,
+            )
+            contents_coroutine = aembed_onnx(
+                session=sess,
+                texts=contents,
+                chunking=True,
+                truncate=False,
+            )
+
+            embeddings = await asyncio.gather(titles_coroutine, contents_coroutine)
+            for seq, title_vector, content_vector in zip(
+                notices.keys(), embeddings[0], embeddings[1]
+            ):
+                notices[seq]["embeddings"] = {
+                    "title_embeddings": title_vector,
+                    "content_embeddings": content_vector,
+                }
+
+            return notices
+
+    async def ascrape_all(
+        self, url_key: str, interval: int, to: int = -1
+    ) -> Dict[int, NoticeMEDTO]:
         seq = self.fetch_last_seq(url_key)
         if seq is None:
             raise Exception(f"가장 최근 게시물을 불러오지 못했습니다({url_key})")
 
-        total_notices: List[NoticeMEDTO] = []
-        total_title_embeddings: List[EmbedResult | None] = []
-        total_content_embeddings: List[List[EmbedResult] | None] = []
+        results: Dict[int, NoticeMEDTO] = {}
 
-        to = seq - 1 if to == -1 else to
-        for temp in range(seq, to, interval * -1):
-            st, ed = temp - interval, temp
+        to = seq - interval if to == -1 else to
+        pbar = tqdm(
+            range(seq, to, interval * -1),
+            desc="Scraping",
+        )
+        for ed in pbar:
+            st = ed - interval
             notices = await self.afetch_details(url_key, st, ed)
-            notices = [notice for notice in notices if notice is not None]
+            notices = await self.aembed_notice(notices)
+            results = {**results, **notices}
 
-            titles = [notice["title"] for notice in notices]
-            contents = [notice["content"] for notice in notices]
-
-            timeout = aiohttp.ClientTimeout(total=6000)
-            async with aiohttp.ClientSession(timeout=timeout) as sess:
-                semaphore = asyncio.Semaphore(2)
-                titles_coroutine = aembed_onnx(
-                    session=sess,
-                    semaphore=semaphore,
-                    texts=titles,
-                    chunking=False,
-                    truncate=True,
-                )
-                contents_coroutine = aembed_onnx(
-                    session=sess,
-                    semaphore=semaphore,
-                    texts=contents,
-                    chunking=True,
-                    truncate=False,
-                )
-                title_embeddings, content_embeddings = await asyncio.gather(
-                    titles_coroutine, contents_coroutine
-                )
-
-                total_title_embeddings += (
-                    title_embeddings
-                    if title_embeddings is not None
-                    else [None] * len(notices)
-                )
-
-                total_content_embeddings += (
-                    content_embeddings
-                    if content_embeddings is not None
-                    else [None] * len(notices)
-                )
-
-            total_notices += notices
-
-        return total_notices, total_title_embeddings, total_content_embeddings
+        return results
 
     def _parse_last_seq(self, soup: BeautifulSoup):
         table_rows = soup.select(SELECTORs["list"])
@@ -159,9 +162,8 @@ class NoticeMECrawler:
 
         return seq
 
-    def _parse_detail(self, seq: int, soup: BeautifulSoup):
-        result: NoticeMEDTO = {
-            "seq": seq,
+    def _parse_detail(self, seq: int, soup: BeautifulSoup) -> NoticeMEDTO:
+        info: NoticeMEInfoDTO = {
             "title": "",
             "date": "",
             "author": "",
@@ -175,7 +177,7 @@ class NoticeMECrawler:
         }
 
         if any(element is None for _, element in elements.items()):
-            return
+            return {"seq": seq}
 
         # 타입 체크를 위한 멋진 코드
         assert elements["title"] is not None
@@ -184,23 +186,24 @@ class NoticeMECrawler:
         assert elements["attachments"] is not None
         assert elements["content"] is not None
 
-        result["title"] = elements["title"].get_text(separator="", strip=True)
-        result["date"] = elements["date"].get_text(separator="", strip=True)
-        result["author"] = elements["author"].get_text(separator="", strip=True)
-        result["attachments"] = [
+        info["title"] = elements["title"].get_text(separator="", strip=True)
+        info["date"] = elements["date"].get_text(separator="", strip=True)
+        info["author"] = elements["author"].get_text(separator="", strip=True)
+        info["attachments"] = [
             {
                 "name": self._preprocess_text(a.text, True),
                 "url": self._preprocess_text(str(a["href"]), True),
             }
             for a in elements["attachments"].select("a")
         ]
-        result["content"] = self._preprocess_text(
+        info["content"] = self._preprocess_text(
             md(elements["content"].decode_contents())
         )
 
         for img in soup.select("img"):
             img.extract()
 
+        result: NoticeMEDTO = {"seq": seq, "info": info}
         return result
 
     def _preprocess_text(self, text: str, remove_newline: bool = False):

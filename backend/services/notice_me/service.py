@@ -5,7 +5,6 @@ from pgvector.sqlalchemy import SparseVector
 from db.common import V_DIM
 from db.models import AttachmentModel, NoticeChunkModel, NoticeModel
 from db.repositories import transaction, NoticeMERepository
-from utils.embed import EmbedResult
 
 from .dto import NoticeMEDTO
 import logging
@@ -20,61 +19,42 @@ class NoticeMEService:
         self,
         category: str,
         notices: List[NoticeMEDTO],
-        title_vectors: List[EmbedResult | None],
-        content_vectors: List[List[EmbedResult] | None],
     ):
-        _title_vectors = [
-            (
-                {
-                    "title_sparse_vector": SparseVector(t["sparse"], V_DIM),
-                    "title_vector": t["dense"],
-                }
-                if t is not None
-                else None
-            )
-            for t in title_vectors
-        ]
 
-        _attachments = [
-            [AttachmentModel(**att) for att in n["attachments"]]
-            for n in notices
-            if "attachments" in n
-        ]
+        def get_notice_model(notice: NoticeMEDTO):
+            notice_model = NoticeModel(category=category)
+            if "info" in notice:
+                notice_model.title = notice["info"]["title"]
+                notice_model.content = notice["info"]["content"]
+                notice_model.date = notice["info"]["date"]
+                notice_model.author = notice["info"]["author"]
 
-        for notice in notices:
-            del notice["attachments"]
+                if notice["info"]["attachments"] is not None:
+                    notice_model.attachments = [
+                        AttachmentModel(**att) for att in notice["info"]["attachments"]
+                    ]
 
-        _content_vectors = [
-            (
-                [
+            if "embeddings" in notice:
+                embeddings = notice["embeddings"]
+                notice_model.title_sparse_vector = SparseVector(
+                    embeddings["title_embeddings"]["sparse"], V_DIM
+                )
+                notice_model.title_vector = embeddings["title_embeddings"]["dense"]
+                notice_model.content_chunks = [
                     NoticeChunkModel(
-                        chunk_content=cc["chunk"],
-                        chunk_vector=cc["dense"],
-                        chunk_sparse_vector=SparseVector(cc["sparse"], V_DIM),
+                        chunk_content=content_vector["chunk"],
+                        chunk_vector=content_vector["dense"],
+                        chunk_sparse_vector=SparseVector(
+                            content_vector["sparse"], V_DIM
+                        ),
                     )
-                    for cc in (c if c is not None else [])
+                    for content_vector in embeddings["content_embeddings"]
                 ]
-            )
-            for c in content_vectors
-        ]
 
-        print(len(_content_vectors[0]))
+            return notice_model
 
         try:
-            notice_models = [
-                NoticeModel(
-                    **notice,
-                    **title_vector,
-                    content_chunks=content_chunks,
-                    attachments=attachments,
-                    category=category
-                )
-                for notice, title_vector, attachments, content_chunks in zip(
-                    notices, _title_vectors, _attachments, _content_vectors
-                )
-            ]
-
-            # self.notice_repo.bulk_create(notice_models)
+            notice_models = [get_notice_model(notice) for notice in notices]
             self.notice_repo.create_all(notice_models)
 
         except Exception:
