@@ -1,3 +1,11 @@
+"""공지사항(기계공학부) 게시글 크롤링 스크립트
+
+Usage:
+    poetry run python3 scripts/crawler/notice_me.py --category <category> --interval <interval>
+        -i, --interval: 한 번에 스크랩 할 게시글 수 (default: 50)
+        -c, --category: 공지사항 카테고리 (`services/notice_me/crawler.py` 참고. default: ALL)
+"""
+
 import argparse
 import asyncio
 
