@@ -49,10 +49,6 @@ class DBConfig(BaseSettings):   ##pydantic data validation
 
 db_config = DBConfig()
 SQLALCHEMY_DB_URL = f"postgresql://{db_config.DB_USER}:{db_config.DB_PASSWORD}@{db_config.DB_HOST}:{db_config.DB_PORT}/{db_config.DB_DATABASE}"
-
-
-
-
 Base = declarative_base()
 engine = create_engine(SQLALCHEMY_DB_URL, echo=False)
 Base.metadata.bind = engine 
