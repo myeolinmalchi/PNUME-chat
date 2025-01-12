@@ -21,6 +21,8 @@ pgvector = "^0.3.6"
 sqlalchemy = "^2.0.36"
 python-dotenv = "^1.0.1"
 
+[tool.poetry.group.dev.dependencies]
+yapf = "^0.43.0"
 
 [build-system]
 requires = ["poetry-core"]
