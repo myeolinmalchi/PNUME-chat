@@ -4,8 +4,8 @@ import re
 
 DTO = TypeVar("DTO")
 
+class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
 
-class BaseCrawler(Generic[DTO]):
     async def scrape_all_async(
         self,
         interval: int,

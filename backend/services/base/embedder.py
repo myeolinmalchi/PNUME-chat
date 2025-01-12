@@ -3,11 +3,12 @@ from typing import Generic, List, TypeVar
 
 from aiohttp import ClientSession
 
-D = TypeVar("D")
 
 
-class BaseEmbedder(Generic[D]):
+DTO = TypeVar("DTO")
 
+
+class BaseEmbedder(Generic[DTO], metaclass=HTTPMetaclass):
     @abstractmethod
     async def embed_async(self, item: D, sess: ClientSession) -> D:
         raise NotImplementedError("method 'aembed' must be implemented before use.")
