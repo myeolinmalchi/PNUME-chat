@@ -28,9 +28,12 @@ class ProfessorModel(Base):
     major: Mapped["MajorModel"] = relationship(back_populates="professors")
     minor: Mapped["MinorModel"] = relationship(back_populates="professors")
 
-    fields: Mapped[List["ResearchFieldModel"]] = relationship(back_populates="professor")
-    educations: Mapped[List["EducationModel"]] = relationship(back_populates="professor")
-    careers: Mapped[List["CareerModel"]] = relationship(back_populates="professor")
+    fields: Mapped[List["ResearchFieldModel"]
+                   ] = relationship(back_populates="professor")
+    educations: Mapped[List["EducationModel"]
+                       ] = relationship(back_populates="professor")
+    careers: Mapped[List["CareerModel"]
+                    ] = relationship(back_populates="professor")
 
 
 class ResearchFieldModel(Base):
@@ -45,7 +48,7 @@ class ResearchFieldModel(Base):
     dense_vector = mapped_column(Vector(N_DIM), nullable=False)
     sparse_vector = mapped_column(SPARSEVEC(V_DIM), nullable=False)
 
-    professor: Mapped["ProfessorModel"] = relationship(back_populates="research_fields")
+    professor: Mapped["ProfessorModel"] = relationship(back_populates="fields")
 
 
 class EduTypeEnum(Enum):
@@ -65,11 +68,15 @@ class EducationModel(Base):
 
     name = mapped_column(String, nullable=False)
     edu_type = mapped_column(
-        SQLEnum(EduTypeEnum, values_callable=lambda obj: [e.value for e in obj]),
+        SQLEnum(
+            EduTypeEnum, values_callable=lambda obj: [e.value for e in obj]
+        ),
         nullable=True,
     )
 
-    professor: Mapped["ProfessorModel"] = relationship(back_populates="research_fields")
+    professor: Mapped["ProfessorModel"] = relationship(
+        back_populates="educations"
+    )
 
 
 class CareerModel(Base):
@@ -84,7 +91,11 @@ class CareerModel(Base):
     dense_vector = mapped_column(Vector(N_DIM), nullable=False)
     sparse_vector = mapped_column(SPARSEVEC(V_DIM), nullable=False)
 
-    professor: Mapped["ProfessorModel"] = relationship(back_populates="research_fields")
+    professor: Mapped["ProfessorModel"] = relationship(back_populates="careers")
 
 
-PROFESSOR_MODEL_MAP = {"fields": ResearchFieldModel, "educations": EducationModel, "careers": CareerModel}
+PROFESSOR_MODEL_MAP = {
+    "fields": ResearchFieldModel,
+    "educations": EducationModel,
+    "careers": CareerModel
+}

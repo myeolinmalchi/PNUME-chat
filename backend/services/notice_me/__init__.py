@@ -1,3 +1,4 @@
 from .dto import *
-from .service import *
+from .embedder import *
 from .crawler import *
+from .service import *
