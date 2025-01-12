@@ -6,14 +6,42 @@ DTO = TypeVar("DTO")
 
 
 class BaseCrawler(Generic[DTO]):
+    async def scrape_all_async(
+        self,
+        interval: int,
+        delay: float = 0,
+        session: Optional[ClientSession] = None,
+        **kwargs
+    ) -> List[DTO]:
+        if session is None:
+            raise ValueError("parameter 'session' cannot be None.")
+
+        return await self._scrape_all_async(
+            interval, delay, **kwargs, session=session
+        )
 
     @abstractmethod
-    async def scrape_all_async(self, interval: int) -> List[DTO]:
-        raise NotImplementedError("method 'scrape_all_async' must be implemented before use.")
+    async def _scrape_all_async(
+        self, interval: int, delay: float, session: ClientSession, **kwargs
+    ) -> List[DTO]:
+        pass
+
+    async def scrape_partial_async(
+        self,
+        seqs: List[int],
+        session: Optional[ClientSession] = None,
+        **kwargs
+    ) -> List[DTO]:
+        if session is None:
+            raise ValueError("parameter 'session' cannot be None.")
+
+        return await self._scrape_partial_async(seqs, **kwargs, session=session)
 
     @abstractmethod
-    async def scrape_partial_async(self, st: int, ed: int) -> List[DTO]:
-        raise NotImplementedError("method 'scrape_all_async' must be implemented before use.")
+    async def _scrape_partial_async(
+        self, seqs: List[int], session: ClientSession, **kwargs
+    ) -> List[DTO]:
+        pass
 
     def _preprocess_text(self, text: str, remove_newline: bool = False):
         """텍스트 전처리"""
