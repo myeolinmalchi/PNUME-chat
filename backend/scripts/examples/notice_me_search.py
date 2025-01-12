@@ -7,28 +7,26 @@ Usage:
 """
 
 import asyncio
-from db.repositories import NoticeMERepository
-from utils.embed import embed_onnx
 import argparse
 import logging
+
+from services.notice_me.service import create_notice_me_service
 
 logger = logging.getLogger(__name__)
 
 
 async def run(lexical_ratio: float, query: str):
-    notice_repo = NoticeMERepository()
+    notice_service = create_notice_me_service()
 
     try:
-        res = embed_onnx(query, chunking=False, truncate=True)
-
-        results = notice_repo.search_notices_hybrid(
-            dense_vector=res["dense"],
-            sparse_vector=res["sparse"],
-            lexical_ratio=lexical_ratio,
+        search_results = notice_service.search_notices_with_filter(
+            query, lexical_ratio=lexical_ratio
         )
 
-        for idx, (notice, score) in enumerate(results):
-            print(f"{idx + 1}. {notice.title} (score: {score:.4f})")
+        for idx, (notice, score) in enumerate(search_results):
+            print(
+                f"{idx + 1}. {notice.title} ({notice.date}) (score: {score:.4f})"
+            )
 
     except Exception as e:
         logger.exception(e)
@@ -36,7 +34,9 @@ async def run(lexical_ratio: float, query: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--lexical-ratio", dest="lexical_ratio", default=0.5)
+    parser.add_argument(
+        "-l", "--lexical-ratio", dest="lexical_ratio", default=0.5
+    )
     parser.add_argument("-q", "--query", dest="query", required=True)
     args = parser.parse_args()
 

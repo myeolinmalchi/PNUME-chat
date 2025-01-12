@@ -13,54 +13,57 @@ from sqlalchemy import text
 
 from db.common import get_engine
 from db.repositories import NoticeMERepository
-from db.repositories.base import transaction
+from db.repositories import transaction
 from services.notice_me import NoticeMECrawler, URLs, NoticeMEService
 import logging
 
+from services.notice_me.embedder import NoticeMEEmbedder
+
 
 @transaction()
-async def run(interval: int, category: str):
+async def main(**kwargs):
     logging.basicConfig(
         level=logging.INFO,
         format="[%(category)s] %(message)s",
         datefmt="%m/%d/%Y %I:%M:%S %p",
     )
 
+    category = kwargs.get('category', 'ALL')
+
     if category not in URLs.keys() and category != "ALL":
         raise Exception("존재하지 않는 카테고리입니다.")
 
     notice_repo = NoticeMERepository()
-    notice_service = NoticeMEService(notice_repo)
+    notice_embedder = NoticeMEEmbedder()
     notice_crawler = NoticeMECrawler()
+    notice_service = NoticeMEService(
+        notice_repo, notice_embedder, notice_crawler
+    )
 
+    categories = {**URLs} if category == "ALL" else {category: URLs[category]}
     engine = get_engine()
-    with engine.connect() as conn:
-        conn.execute(text("delete from notice_attachments;"))
-        conn.execute(text("delete from notice_content_chunks;"))
-        conn.execute(text("delete from notices;"))
-        conn.commit()
 
-    categories = URLs.keys() if category == "ALL" else [category]
+    reset = kwargs.get('reset', True)
 
-    for url_key in categories:
+    for url_key in categories.keys():
+
+        if reset:
+            with engine.connect() as conn:
+                conn.execute(
+                    text(f"delete from notices where category = '{url_key}';")
+                )
+                conn.commit()
+
         try:
-            seq = notice_crawler.fetch_last_seq(url_key)
-            logging.info(
-                f"마지막 게시글: {seq}",
-                extra={
-                    "category": url_key,
-                },
+            await notice_service.run_full_crawling_pipeline_async(
+                url_key=url_key,
+                interval=kwargs.get('interval'),
+                delay=kwargs.get('delay'),
+                with_embeddings=True
             )
-            if seq is None:
-                raise Exception(f"마지막 게시글 번호를 불러오지 못했습니다.")
-
-            notices = await notice_crawler.ascrape_all(url_key, interval)
-            notices = list(notices.values())
-            notices = [notice for notice in notices if "info" in notice]
-            notice_service.create_notices(url_key, notices)
-        except Exception:
+        except Exception as e:
             logging.exception(
-                "Error while scraping",
+                f"Error while scraping({e})",
                 extra={
                     "category": url_key,
                 },
@@ -70,13 +73,24 @@ async def run(interval: int, category: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i", "--interval", dest="interval", action="store", default="50"
+        "-i", "--interval", dest="interval", action="store", default="10"
+    )
+    parser.add_argument(
+        "-d", "--delay", dest="delay", action="store", default="0"
     )
     parser.add_argument(
         "-c", "--category", dest="category", action="store", default="ALL"
     )
+    parser.add_argument(
+        "-r", "--reset", dest="reset", action="store", default="True"
+    )
     args = parser.parse_args()
 
-    interval = int(args.interval)
-    category = str(args.category)
-    asyncio.run(run(interval, category))
+    kwargs = {
+        "interval": int(args.interval),
+        "delay": float(args.delay),
+        "category": str(args.category),
+        "reset": bool(args.reset)
+    }
+
+    asyncio.run(main(**kwargs))
