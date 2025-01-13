@@ -4,10 +4,11 @@ from typing import List
 from bs4 import BeautifulSoup
 import re
 
-from services.base.crawler import BaseCrawler
-from .dto import ProfessorDTO
+from services.professor import ProfessorDTO
 
 import re
+
+from .base import EDU_KEYWORDS, ProfessorCrawlerBase
 
 LIST_URL = "https://me.pusan.ac.kr/new/sub01/sub04.asp?perPage=1000"
 DETAIL_URL = "https://me.pusan.ac.kr/new/sub01/sub04_detail.asp"
@@ -25,15 +26,8 @@ SELECTORs = {
     },
 }
 
-EDU_KEYWORDS = {
-    "학사": ["학사", "학부", "B.S", "BS"],
-    "석사": ["석사", "M.S", "MS"],
-    "박사": ["박사", "Ph.D", "PhD"],
-    "석박사통합": ["통합", "석박사"],
-}
 
-
-class ProfessorMECrawler(BaseCrawler[ProfessorDTO]):
+class ProfessorMECrawler(ProfessorCrawlerBase):
 
     def scrape_seqs(self) -> List[int]:
         soup = self._scrape(LIST_URL)
