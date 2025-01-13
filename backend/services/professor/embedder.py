@@ -5,7 +5,7 @@ from services.professor.dto import ProfessorDTO
 import asyncio
 
 
-class ProfessorMEEmbedder(BaseEmbedder[ProfessorDTO]):
+class ProfessorEmbedder(BaseEmbedder[ProfessorDTO]):
 
     async def _embed_all_async(self, items, interval, session):
 
