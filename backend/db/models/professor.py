@@ -1,6 +1,6 @@
 from typing import List
 from pgvector.sqlalchemy import SPARSEVEC, Vector
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from db.common import N_DIM, V_DIM, Base
 from sqlalchemy import Enum as SQLEnum
@@ -12,9 +12,10 @@ class ProfessorModel(Base):
     __tablename__ = "professors"
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    seq = mapped_column(Integer, nullable=False)
 
-    major_id = mapped_column(ForeignKey("majors.id"))
-    minor_id = mapped_column(ForeignKey("minors.id"))
+    major_id = mapped_column(ForeignKey("majors.id"), nullable=True)
+    minor_id = mapped_column(ForeignKey("minors.id"), nullable=True)
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     name_eng: Mapped[str] = mapped_column(String, nullable=True)
@@ -34,6 +35,10 @@ class ProfessorModel(Base):
                        ] = relationship(back_populates="professor")
     careers: Mapped[List["CareerModel"]
                     ] = relationship(back_populates="professor")
+
+    __table_args__ = (
+        UniqueConstraint('seq', 'major_id', name='uq_major_seq'),
+    )
 
 
 class ResearchFieldModel(Base):
