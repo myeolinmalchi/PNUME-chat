@@ -6,16 +6,17 @@ from db.models import ProfessorModel, PROFESSOR_MODEL_MAP
 from db.repositories import transaction, ProfessorRepository
 
 from services.base import BaseService
-from services.professor import ProfessorDTO, ProfessorMEEmbedder, ProfessorMECrawler
+from services.professor import ProfessorDTO, ProfessorEmbedder, ProfessorMECrawler
+from services.professor.crawler.base import ProfessorCrawlerBase
 
 
-class ProfessorMEService(BaseService[ProfessorDTO, ProfessorModel]):
+class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
 
     def __init__(
         self,
         professor_repo: ProfessorRepository,
-        professor_embedder: ProfessorMEEmbedder,
-        professor_crawler: ProfessorMECrawler,
+        professor_embedder: ProfessorEmbedder,
+        professor_crawler: ProfessorCrawlerBase,
     ):
         self.professor_repo = professor_repo
         self.professor_crawler = professor_crawler
@@ -71,17 +72,17 @@ class ProfessorMEService(BaseService[ProfessorDTO, ProfessorModel]):
 
 def create_professor_me_service(
     professor_repo: Optional[ProfessorRepository] = None,
-    professor_crawler: Optional[ProfessorMECrawler] = None,
-    professor_embedder: Optional[ProfessorMEEmbedder] = None
+    professor_crawler: Optional[ProfessorCrawlerBase] = None,
+    professor_embedder: Optional[ProfessorEmbedder] = None
 ):
     professor_repo = ProfessorRepository(
     ) if not professor_repo else professor_repo
     professor_crawler = ProfessorMECrawler(
     ) if not professor_crawler else professor_crawler
-    professor_embedder = ProfessorMEEmbedder(
+    professor_embedder = ProfessorEmbedder(
     ) if not professor_embedder else professor_embedder
 
-    professor_service = ProfessorMEService(
+    professor_service = ProfessorService(
         professor_repo, professor_embedder, professor_crawler
     )
 
