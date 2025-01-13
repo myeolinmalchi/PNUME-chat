@@ -67,3 +67,22 @@ class ProfessorMEService(BaseService[ProfessorDTO, ProfessorModel]):
         professors = self.professor_repo.create_all(professors)
 
         return professors
+
+
+def create_professor_me_service(
+    professor_repo: Optional[ProfessorRepository] = None,
+    professor_crawler: Optional[ProfessorMECrawler] = None,
+    professor_embedder: Optional[ProfessorMEEmbedder] = None
+):
+    professor_repo = ProfessorRepository(
+    ) if not professor_repo else professor_repo
+    professor_crawler = ProfessorMECrawler(
+    ) if not professor_crawler else professor_crawler
+    professor_embedder = ProfessorMEEmbedder(
+    ) if not professor_embedder else professor_embedder
+
+    professor_service = ProfessorMEService(
+        professor_repo, professor_embedder, professor_crawler
+    )
+
+    return professor_service
