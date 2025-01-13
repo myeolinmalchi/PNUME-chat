@@ -1,7 +1,10 @@
+from typing import Optional
 from pgvector.sqlalchemy import SparseVector
+
 from db.common import V_DIM
 from db.models import ProfessorModel, PROFESSOR_MODEL_MAP
 from db.repositories import transaction, ProfessorRepository
+
 from services.base import BaseService
 from services.professor import ProfessorDTO, ProfessorMEEmbedder, ProfessorMECrawler
 
@@ -21,15 +24,26 @@ class ProfessorMEService(BaseService[ProfessorDTO, ProfessorModel]):
     def dto2orm(self, dto: ProfessorDTO):
         _professor = {**dto["basic_info"]}
 
+        major_minor = self.professor_repo.find_major_minor(
+            _professor["major"], _professor["minor"]
+        )
+
+        del _professor["major"]
+        del _professor["minor"]
+
+        _professor = {**_professor, **major_minor}
+
         def dict2dict(_dict: dict):
             return {
                 **({
                     k: v
-                    for k, v in _dict.items() if k is not "seq"
+                    for k, v in _dict.items() if k != "seq" and k != "embeddings"
                 }),
                 **({
                     "dense_vector": _dict["embeddings"]["dense"],
-                    "sparse_vector": SparseVector(_dict["embeddings"]["sparse"], V_DIM)
+                    "sparse_vector": SparseVector(
+                        _dict["embeddings"]["sparse"], V_DIM
+                    )
                 } if "embeddings" in _dict else {})
             }
 
@@ -38,12 +52,17 @@ class ProfessorMEService(BaseService[ProfessorDTO, ProfessorModel]):
             _infos = [dict2dict(info) for info in dto["additional_info"][key]]
             _professor[key] = [Model(**info) for info in _infos]
 
-        return ProfessorModel(**_professor)
+        return ProfessorModel(**_professor, seq=dto["seq"])
+
+    def orm2dto(self, orm) -> ProfessorDTO:
+        ...
 
     @transaction()
-    async def run_full_crawling_pipeline_async(self):
-        professors = await self.professor_crawler.scrape_all_async(10)
-        professors = await self.professor_embedder.aembed_batch(professors)
+    async def run_full_crawling_pipeline_async(self, **kwargs):
+        professors = await self.professor_crawler.scrape_all_async(
+            interval=kwargs.get('interval', 10), delay=kwargs.get('delay', 0)
+        )
+        professors = await self.professor_embedder.embed_all_async(professors)
         professors = [self.dto2orm(p) for p in professors]
         professors = self.professor_repo.create_all(professors)
 
