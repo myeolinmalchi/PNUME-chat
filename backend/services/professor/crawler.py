@@ -34,7 +34,7 @@ EDU_KEYWORDS = {
 }
 
 
-class ProfessorCrawler(BaseCrawler):
+class ProfessorMECrawler(BaseCrawler[ProfessorDTO]):
 
     def scrape_seqs(self) -> List[int]:
         soup = scrape(LIST_URL)

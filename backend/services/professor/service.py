@@ -1,18 +1,18 @@
 from pgvector.sqlalchemy import SparseVector
 from db.common import V_DIM
-from db.models.professor import ProfessorModel, PROFESSOR_MODEL_MAP
-from db.repositories.base import transaction
-from db.repositories.professor import ProfessorRepository
-from services.professor import ProfessorDTO, ProfessorEmbedder, ProfessorCrawler
+from db.models import ProfessorModel, PROFESSOR_MODEL_MAP
+from db.repositories import transaction, ProfessorRepository
+from services.base import BaseService
+from services.professor import ProfessorDTO, ProfessorMEEmbedder, ProfessorMECrawler
 
 
-class ProfessorService:
+class ProfessorMEService(BaseService[ProfessorDTO, ProfessorModel]):
 
     def __init__(
         self,
         professor_repo: ProfessorRepository,
-        professor_embedder: ProfessorEmbedder,
-        professor_crawler: ProfessorCrawler,
+        professor_embedder: ProfessorMEEmbedder,
+        professor_crawler: ProfessorMECrawler,
     ):
         self.professor_repo = professor_repo
         self.professor_crawler = professor_crawler

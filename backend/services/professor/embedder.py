@@ -5,9 +5,9 @@ from aiohttp import ClientSession, ClientTimeout
 from services.base import BaseEmbedder
 from services.professor.dto import ProfessorDTO
 from utils.embed import aembed_onnx
+class ProfessorMEEmbedder(BaseEmbedder[ProfessorDTO]):
 
 
-class ProfessorEmbedder(BaseEmbedder[ProfessorDTO]):
     async def aembed(self, item, sess):
         from itertools import islice
 
