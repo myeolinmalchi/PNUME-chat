@@ -78,6 +78,8 @@ class EducationModel(Base):
         ),
         nullable=True,
     )
+    dense_vector = mapped_column(Vector(N_DIM), nullable=False)
+    sparse_vector = mapped_column(SPARSEVEC(V_DIM), nullable=False)
 
     professor: Mapped["ProfessorModel"] = relationship(
         back_populates="educations"
