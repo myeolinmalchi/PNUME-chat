@@ -13,8 +13,6 @@ import requests
 
 DTO = TypeVar("DTO")
 
-domain = "https://me.pusan.ac.kr"
-
 
 class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
 
@@ -57,24 +55,22 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
 
     @overload
     async def _scrape_async(
-        self, path: str, session: ClientSession
+        self, url: str, session: ClientSession
     ) -> BeautifulSoup:
         ...
 
     @overload
-    async def _scrape_async(self, path: List[str],
+    async def _scrape_async(self, url: List[str],
                             session: ClientSession) -> List[BeautifulSoup]:
         ...
 
     async def _scrape_async(
-        self, path: str | List[str], session: ClientSession
+        self, url: str | List[str], session: ClientSession
     ) -> BeautifulSoup | List[BeautifulSoup]:
 
         @retry_async(delay=5)
-        async def scrape_coroutine(_path):
-            test = len(_path) == 0 or _path.startswith("/")
-            _path = _path if test else f"/{_path}"
-            async with session.get(f"{domain}{_path}") as res:
+        async def scrape_coroutine(_url):
+            async with session.get(_url) as res:
                 if res.status == 200:
                     html = await res.read()
                     soup = BeautifulSoup(html, "html.parser")
@@ -82,30 +78,25 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
 
                 raise aiohttp.ClientError
 
-        if isinstance(path, str):
-            return await scrape_coroutine(path)
-        return await asyncio.gather(
-            *[scrape_coroutine(_path) for _path in path]
-        )
+        if isinstance(url, str):
+            return await scrape_coroutine(url)
+        return await asyncio.gather(*[scrape_coroutine(_url) for _url in url])
 
     @overload
-    def _scrape(self, path: str) -> BeautifulSoup:
+    def _scrape(self, url: str) -> BeautifulSoup:
         ...
 
     @overload
     def _scrape(
         self,
-        path: List[str],
+        url: List[str],
     ) -> List[BeautifulSoup]:
         ...
 
-    def _scrape(self, path: str | List[str]):
+    def _scrape(self, url: str | List[str]):
 
-        def scrape(_path):
-            test = len(path) == 0 or _path.startswith("/")
-            _path = _path if test else f"/{_path}"
-
-            response = requests.get(f"{domain}{_path}", timeout=3.0)
+        def scrape(_url):
+            response = requests.get(_url, timeout=5.0)
             if response.status_code == 200:
                 html = response.text
                 soup = BeautifulSoup(html, "html.parser")
@@ -113,12 +104,12 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
 
             raise Exception
 
-        if isinstance(path, str):
-            return scrape(path)
+        if isinstance(url, str):
+            return scrape(url)
 
         soups = []
-        for _path in path:
-            result = scrape(_path)
+        for _url in url:
+            result = scrape(_url)
             soups.append(result)
 
         return soups
