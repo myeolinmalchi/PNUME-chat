@@ -29,7 +29,7 @@ URLs = {
         "db": "notice"
     },
     "학부_소식": {
-        "path": "/new/sub05/sub_02.asp",
+        "path": "/new/sub05/sub02.asp",
         "db": "hakbunews"
     },
     "언론_속_학부": {
@@ -59,6 +59,8 @@ SELECTORs = {
     },
 }
 
+DOMAIN = "https://me.pusan.ac.kr"
+
 
 class NoticeMECrawler(BaseCrawler[NoticeMEDTO]):
 
@@ -67,7 +69,9 @@ class NoticeMECrawler(BaseCrawler[NoticeMEDTO]):
         if url_key not in URLs.keys():
             raise Exception("최근 게시글 seq를 불러오지 못했습니다.")
 
-        soup = self._scrape(URLs[url_key]["path"])
+        url = f"{DOMAIN}{URLs[url_key]['path']}"
+
+        soup = self._scrape(url)
         seq = self._parse_last_seq(soup)
 
         return seq
@@ -100,7 +104,9 @@ class NoticeMECrawler(BaseCrawler[NoticeMEDTO]):
         path = URLs[url_key]["path"]
         db = URLs[url_key]["db"]
 
-        _urls = [f"{path}?db={db}&seq={seq}&page_mode=view" for seq in seqs]
+        _urls = [
+            f"{DOMAIN}{path}?db={db}&seq={seq}&page_mode=view" for seq in seqs
+        ]
 
         soups = await self._scrape_async(_urls, session=session)
         loop = asyncio.get_running_loop()
