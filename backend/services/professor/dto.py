@@ -1,6 +1,6 @@
 from typing import List, NotRequired, TypedDict, Literal
 
-from utils.embed import EmbedResult
+from services.base import EmbedResult
 
 
 class ResearchFieldDTO(TypedDict):
