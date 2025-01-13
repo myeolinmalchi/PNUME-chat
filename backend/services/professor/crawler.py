@@ -1,11 +1,10 @@
 import asyncio
-from typing import Dict, List
+from typing import List
 
 from bs4 import BeautifulSoup
 import re
 
 from services.base.crawler import BaseCrawler
-from utils.scrape import scrape, ascrape_all
 from .dto import ProfessorDTO
 
 import re
@@ -37,7 +36,7 @@ EDU_KEYWORDS = {
 class ProfessorMECrawler(BaseCrawler[ProfessorDTO]):
 
     def scrape_seqs(self) -> List[int]:
-        soup = scrape(LIST_URL)
+        soup = self._scrape(LIST_URL)
         if soup is None:
             return []
 
@@ -62,28 +61,32 @@ class ProfessorMECrawler(BaseCrawler[ProfessorDTO]):
 
         return seqs
 
-    async def scrape_details_async(self, seqs: List[int]) -> Dict[int, ProfessorDTO]:
+    async def _scrape_partial_async(self, seqs, session, **kwargs):
         _urls = [f"{DETAIL_URL}?seq={seq}" for seq in seqs]
 
-        soups = await ascrape_all(_urls, 30)
+        soups = await self._scrape_async(_urls, session=session)
         loop = asyncio.get_running_loop()
         tasks = [
-            loop.run_in_executor(None, self._parse_detail, seq, soup) for seq, soup in zip(seqs, soups)
-            if soup is not None
+            loop.run_in_executor(None, self._parse_detail, seq, soup)
+            for seq, soup in zip(seqs, soups)
         ]
-
         results = await asyncio.gather(*tasks)
-        results = {p["seq"]: p for p in results if p is not None}
-
         return results
 
     def _parse_detail(self, seq: int, soup: BeautifulSoup):
-        elements = {key: soup.select_one(selector) for key, selector in SELECTORs["detail"].items()}
+        elements = {
+            key: soup.select_one(selector)
+            for key, selector in SELECTORs["detail"].items()
+        }
 
-        basic_info = {k: v.get_text(separator="", strip=True) for k, v in elements.items() if v is not None}
+        basic_info = {
+            k: v.get_text(separator="", strip=True)
+            for k, v in elements.items() if v is not None
+        }
+
+        basic_info["major"] = "기계공학부"
 
         additional_info = {}
-
         contents_boxes = soup.select("#contents > div > div.contents-box")
 
         for box in contents_boxes:
@@ -92,9 +95,9 @@ class ProfessorMECrawler(BaseCrawler[ProfessorDTO]):
                 continue
 
             title = title_element.get_text(strip=True)
-            items = title_element.select(".ul-list01 > li")
+            items = box.select(".ul-list01 > li")
 
-            if "연구 분야" in title:
+            if "연구분야" in title:
                 additional_info["fields"] = [{
                     "seq": idx + 1,
                     "name": field.get_text(strip=True)
@@ -124,23 +127,36 @@ class ProfessorMECrawler(BaseCrawler[ProfessorDTO]):
         for img in soup.select("img"):
             img.extract()
 
-        result = ProfessorDTO(**{
-            "seq": seq,
-            "basic_info": basic_info,
-            "additional_info": additional_info,
-        })
+        result = ProfessorDTO(
+            **{
+                "seq": seq,
+                "basic_info": basic_info,
+                "additional_info": additional_info,
+            }
+        )
 
         return result
 
-    async def scrape_all_async(self, interval: int) -> List[ProfessorDTO]:
+    async def _scrape_all_async(self, interval, delay, session,
+                                **kwargs) -> List[ProfessorDTO]:
         seqs = self.scrape_seqs()
-
         results: List[ProfessorDTO] = []
 
-        for st_idx in range(0, len(seqs), interval):
+        from tqdm import tqdm
+
+        pbar = tqdm(
+            range(0, len(seqs), interval),
+            desc="Scraping Professors",
+            total=len(seqs)
+        )
+        for st_idx in pbar:
             ed_idx = st_idx + interval
             _seqs = seqs[st_idx:ed_idx]
-            professors = await self.scrape_details_async(_seqs)
-            results += professors.values()
+            professors = await self.scrape_partial_async(_seqs, session=session)
+            results += professors
+
+            pbar.update(interval)
+
+            await asyncio.sleep(delay)
 
         return results
