@@ -37,20 +37,16 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         pass
 
     async def scrape_partial_async(
-        self,
-        seqs: List[int],
-        session: Optional[ClientSession] = None,
-        **kwargs
+        self, session: Optional[ClientSession] = None, **kwargs
     ) -> List[DTO]:
         if session is None:
             raise ValueError("parameter 'session' cannot be None.")
 
-        return await self._scrape_partial_async(seqs, **kwargs, session=session)
+        return await self._scrape_partial_async(**kwargs, session=session)
 
     @abstractmethod
-    async def _scrape_partial_async(
-        self, seqs: List[int], session: ClientSession, **kwargs
-    ) -> List[DTO]:
+    async def _scrape_partial_async(self, session: ClientSession,
+                                    **kwargs) -> List[DTO]:
         pass
 
     @overload
@@ -96,7 +92,7 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
     def _scrape(self, url: str | List[str]):
 
         def scrape(_url):
-            response = requests.get(_url, timeout=5.0)
+            response = requests.get(_url, timeout=60)
             if response.status_code == 200:
                 html = response.text
                 soup = BeautifulSoup(html, "html.parser")
