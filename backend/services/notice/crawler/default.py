@@ -13,14 +13,14 @@ URLs = {}
 
 SELECTORs = {
     "list": "div._articleTable > form:nth-child(2) table > tbody > tr:not(.headline)",
+    "pagination": "div._articleTable > form:nth-child(3) > div:nth-child(10) > div > ul",
     "detail": {
         "info": {
             "title": "body > div > div.artclViewTitleWrap > h2",
-            "date": "body > div > div.artclViewHead > div.right > dl:first-child > dd",
-            "author": "body > div > div.artclViewHead > div.right > dl:nth-child(3) > dd",
             "content": "body > div > div.artclView",
+            "author_date": "div.artclViewHead > div.right > dl",
         },
-        "attachments": "body > div > div.artclItem.viewForm > dl > dd > ul > li:nth-child(1)"
+        "attachments": "div.artclItem > dl > dd > ul > li"
     }
 }
 
