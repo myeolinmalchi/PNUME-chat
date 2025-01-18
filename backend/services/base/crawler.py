@@ -5,6 +5,7 @@ import re
 
 from aiohttp import ClientSession
 import aiohttp
+from requests.sessions import HTTPAdapter
 
 from mixins.asyncio import retry_async
 from mixins.http_client import HTTPMetaclass
@@ -99,14 +100,17 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
     ) -> List[BeautifulSoup]:
         ...
 
-    def _scrape(self, url: str | List[str]):
+    def _scrape(self, url: str | List[str], timeout: int = 180):
 
         def scrape(_url):
-            response = requests.get(_url, timeout=60)
-            if response.status_code == 200:
-                html = response.text
-                soup = BeautifulSoup(html, "html.parser")
-                return soup
+            with requests.Session() as session:
+                adapter = HTTPAdapter(max_retries=10)
+                session.mount("https://", adapter)
+                response = session.get(_url, timeout=timeout)
+                if response.status_code == 200:
+                    html = response.text
+                    soup = BeautifulSoup(html, "html5lib")
+                    return soup
 
             raise Exception
 
