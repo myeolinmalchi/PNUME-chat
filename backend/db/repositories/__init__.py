@@ -1,3 +1,4 @@
 from .base import *
-from .notice_me import *
+from .notice import *
 from .professor import *
+from .university import *
