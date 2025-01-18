@@ -3,13 +3,12 @@ from typing import List, Optional
 
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
-from tqdm import tqdm
 
-from services.base.crawler import BaseCrawler
-
-from .dto import NoticeMEDTO
+from services.notice import NoticeDTO
 
 import re
+
+from services.notice.crawler.base import NoticeCrawlerBase
 
 URLs = {
     "공지/학부": {
@@ -60,21 +59,33 @@ SELECTORs = {
 }
 
 DOMAIN = "https://me.pusan.ac.kr"
+DEPARTMENT = "기계공학부"
 
 
-class NoticeMECrawler(BaseCrawler[NoticeMEDTO]):
+class NoticeMECrawler(NoticeCrawlerBase):
 
-    def scrape_last_seq(self, url_key: str) -> int:
-        """가장 최근 게시글 seq 반환"""
+    def scrape_urls(self, **kwargs) -> List[str]:
+        """게시글 url 목록 불러오기"""
+        url_key = kwargs.get("url_key")
+        if not url_key:
+            raise ValueError("'url_key' must be contained")
         if url_key not in URLs.keys():
-            raise Exception("최근 게시글 seq를 불러오지 못했습니다.")
+            raise ValueError("존재하지 않는 카테고리입니다.")
 
         url = f"{DOMAIN}{URLs[url_key]['path']}"
 
         soup = self._scrape(url)
         seq = self._parse_last_seq(soup)
 
-        return seq
+        path = URLs[url_key]["path"]
+        db = URLs[url_key]["db"]
+
+        _urls = [
+            f"{DOMAIN}{path}?db={db}&seq={seq}&page_mode=view"
+            for seq in range(1, seq + 1)
+        ]
+
+        return _urls
 
     def _parse_last_seq(self, soup: BeautifulSoup):
         table_rows = soup.select(SELECTORs["list"])
@@ -96,62 +107,40 @@ class NoticeMECrawler(BaseCrawler[NoticeMEDTO]):
 
         raise Exception
 
-    async def _scrape_partial_async(self, seqs, session, **kwargs):
+    async def _scrape_partial_async(self, session, **kwargs):
+        urls = kwargs.get('urls')
+        if not urls:
+            raise ValueError("parameter 'urls' must be contained")
+
         url_key = kwargs.get('url_key')
+
+        if not url_key:
+            raise ValueError(f"parameter 'url_key' must be contained")
         if url_key not in URLs:
-            raise Exception(f"존재하지 않는 카테고리입니다.({url_key})")
+            raise ValueError(f"존재하지 않는 카테고리입니다.({url_key})")
 
-        path = URLs[url_key]["path"]
-        db = URLs[url_key]["db"]
-
-        _urls = [
-            f"{DOMAIN}{path}?db={db}&seq={seq}&page_mode=view" for seq in seqs
-        ]
-
-        soups = await self._scrape_async(_urls, session=session)
+        soups = await self._scrape_async(urls, session=session)
         loop = asyncio.get_running_loop()
         tasks = [
-            loop.run_in_executor(None, self._parse_detail, seq, soup, url_key)
-            for seq, soup in zip(seqs, soups)
+            loop.run_in_executor(None, self._parse_detail, soup)
+            for soup in soups
         ]
         notices = await asyncio.gather(*tasks)
+
+        for notice, url in zip(notices, urls):
+            if notice and "info" in notice:
+                notice["url"] = url
+                notice["info"]["category"] = url_key
+                notice["info"]["department"] = DEPARTMENT
+
         notices = [notice for notice in notices if notice]
 
         return notices
 
-    async def _scrape_all_async(self, interval, delay, session, **kwargs):
-        url_key = kwargs.get('url_key')
-        if not url_key or url_key not in URLs:
-            raise ValueError("존재하지 않는 카테고리입니다.")
-
-        seq = self.scrape_last_seq(url_key)
-        results: List[NoticeMEDTO] = []
-
-        to = kwargs.get('to', 1)
-        to = seq - interval if to == -1 else to
-        pbar = tqdm(
-            range(seq, to, interval * -1),
-            total=seq - to,
-            desc=f"Scraping Notices",
-        )
-        for ed in pbar:
-            st = ed - interval
-            notices = await self.scrape_partial_async(
-                list(range(st, ed)), session=session, url_key=url_key
-            )
-            results += notices
-
-            pbar.update(interval)
-
-            pbar.set_postfix({"range": f"({st}-{ed})"})
-            await asyncio.sleep(delay)
-
-        return results
-
-    def _parse_detail(self, seq: int, soup: BeautifulSoup,
-                      category: str) -> Optional[NoticeMEDTO]:
-        _dto = {}
-
+    def _parse_detail(
+        self,
+        soup: BeautifulSoup,
+    ) -> Optional[NoticeDTO]:
         for img in soup.select("img"):
             img.extract()
 
@@ -160,28 +149,27 @@ class NoticeMECrawler(BaseCrawler[NoticeMEDTO]):
             for key, selector in SELECTORs["detail"]["info"].items()
         }
 
-        _dto["info"] = {
+        _info = {
             key: element.get_text(separator="", strip=True)
             for key, element in elements.items() if element is not None
         }
 
-        if "content" not in _dto["info"] or "title" not in _dto["info"]:
+        if "content" not in _info or "title" not in _info:
             return None
 
         att_element = soup.select_one(SELECTORs["detail"]["attachments"])
 
-        if att_element is not None:
-            _dto["attachments"] = [{
-                "name": self._preprocess_text(a.text, True),
-                "url": self._preprocess_text(str(a["href"]), True),
-            } for a in att_element.select("a")]
+        _attachments = []
+        if att_element:
+            for a in att_element.select("a"):
+                if not a or not a.has_attr("href"):
+                    continue
 
-        _dto["info"]["content"] = self._preprocess_text(
-            md(_dto["info"]["content"])
-        )
+                name = self._preprocess_text(a.text, True)
+                path = self._preprocess_text(str(a["href"]), True),
+                _attachments.append({"name": name, "url": f"{DOMAIN}{path}"})
 
-        _dto["info"]["category"] = category
+        _info["content"] = self._preprocess_text(md(_info["content"]))
+        _dto = {"info": _info, "attachments": _attachments}
 
-        result = NoticeMEDTO(**_dto, seq=seq)
-
-        return result
+        return NoticeDTO(**_dto)

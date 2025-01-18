@@ -5,6 +5,7 @@ import re
 
 from aiohttp import ClientSession
 import aiohttp
+from requests.sessions import HTTPAdapter
 
 from mixins.asyncio import retry_async
 from mixins.http_client import HTTPMetaclass
@@ -37,43 +38,49 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         pass
 
     async def scrape_partial_async(
-        self,
-        seqs: List[int],
-        session: Optional[ClientSession] = None,
-        **kwargs
+        self, session: Optional[ClientSession] = None, **kwargs
     ) -> List[DTO]:
         if session is None:
             raise ValueError("parameter 'session' cannot be None.")
 
-        return await self._scrape_partial_async(seqs, **kwargs, session=session)
+        return await self._scrape_partial_async(**kwargs, session=session)
 
     @abstractmethod
-    async def _scrape_partial_async(
-        self, seqs: List[int], session: ClientSession, **kwargs
-    ) -> List[DTO]:
+    async def _scrape_partial_async(self, session: ClientSession,
+                                    **kwargs) -> List[DTO]:
         pass
 
     @overload
     async def _scrape_async(
-        self, url: str, session: ClientSession
+        self,
+        url: str,
+        session: ClientSession,
+        retry_delay: float = 5.0
     ) -> BeautifulSoup:
         ...
 
     @overload
-    async def _scrape_async(self, url: List[str],
-                            session: ClientSession) -> List[BeautifulSoup]:
+    async def _scrape_async(
+        self,
+        url: List[str],
+        session: ClientSession,
+        retry_delay: float = 5.0
+    ) -> List[BeautifulSoup]:
         ...
 
     async def _scrape_async(
-        self, url: str | List[str], session: ClientSession
+        self,
+        url: str | List[str],
+        session: ClientSession,
+        retry_delay: float = 5.0
     ) -> BeautifulSoup | List[BeautifulSoup]:
 
-        @retry_async(delay=5)
+        @retry_async(delay=retry_delay)
         async def scrape_coroutine(_url):
             async with session.get(_url) as res:
                 if res.status == 200:
                     html = await res.read()
-                    soup = BeautifulSoup(html, "html.parser")
+                    soup = BeautifulSoup(html, "html5lib")
                     return soup
 
                 raise aiohttp.ClientError
@@ -93,14 +100,17 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
     ) -> List[BeautifulSoup]:
         ...
 
-    def _scrape(self, url: str | List[str]):
+    def _scrape(self, url: str | List[str], timeout: int = 180):
 
         def scrape(_url):
-            response = requests.get(_url, timeout=5.0)
-            if response.status_code == 200:
-                html = response.text
-                soup = BeautifulSoup(html, "html.parser")
-                return soup
+            with requests.Session() as session:
+                adapter = HTTPAdapter(max_retries=10)
+                session.mount("https://", adapter)
+                response = session.get(_url, timeout=timeout)
+                if response.status_code == 200:
+                    html = response.text
+                    soup = BeautifulSoup(html, "html5lib")
+                    return soup
 
             raise Exception
 

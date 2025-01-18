@@ -40,12 +40,12 @@ def session_wrapper(func):
 
     @wraps(func)
     async def wrapped(*args, **kwargs):
-        sig = signature(func)
         async with semaphore():
+            sig = signature(func)
             if 'session' in sig.parameters and (
                 'session' not in kwargs or kwargs['session'] is None
             ):
-                timeout = aiohttp.ClientTimeout(total=10)
+                timeout = aiohttp.ClientTimeout(total=30)
                 async with aiohttp.ClientSession(timeout=timeout) as sess:
                     kwargs['session'] = sess
                     return await func(*args, **kwargs)
