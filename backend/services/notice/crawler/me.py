@@ -59,6 +59,7 @@ SELECTORs = {
 }
 
 DOMAIN = "https://me.pusan.ac.kr"
+DEPARTMENT = "기계공학부"
 
 
 class NoticeMECrawler(NoticeCrawlerBase):
@@ -126,15 +127,13 @@ class NoticeMECrawler(NoticeCrawlerBase):
         ]
         notices = await asyncio.gather(*tasks)
 
-        notices = [
-            NoticeDTO({
-                **notice, "url": _url,
-                "info": {
-                    **notice["info"], "category": url_key
-                }
-            }) for _url, notice in zip(urls, notices)
-            if notice and "info" in notice
-        ]
+        for notice, url in zip(notices, urls):
+            if notice and "info" in notice:
+                notice["url"] = url
+                notice["info"]["category"] = url_key
+                notice["info"]["department"] = DEPARTMENT
+
+        notices = [notice for notice in notices if notice]
 
         return notices
 
@@ -142,8 +141,6 @@ class NoticeMECrawler(NoticeCrawlerBase):
         self,
         soup: BeautifulSoup,
     ) -> Optional[NoticeDTO]:
-        _dto = {}
-
         for img in soup.select("img"):
             img.extract()
 
@@ -152,26 +149,27 @@ class NoticeMECrawler(NoticeCrawlerBase):
             for key, selector in SELECTORs["detail"]["info"].items()
         }
 
-        _dto["info"] = {
+        _info = {
             key: element.get_text(separator="", strip=True)
             for key, element in elements.items() if element is not None
         }
 
-        if "content" not in _dto["info"] or "title" not in _dto["info"]:
+        if "content" not in _info or "title" not in _info:
             return None
 
         att_element = soup.select_one(SELECTORs["detail"]["attachments"])
 
-        if att_element is not None:
-            _dto["attachments"] = [{
-                "name": self._preprocess_text(a.text, True),
-                "url": self._preprocess_text(str(a["href"]), True),
-            } for a in att_element.select("a")]
+        _attachments = []
+        if att_element:
+            for a in att_element.select("a"):
+                if not a or not a.has_attr("href"):
+                    continue
 
-        _dto["info"]["content"] = self._preprocess_text(
-            md(_dto["info"]["content"])
-        )
+                name = self._preprocess_text(a.text, True)
+                path = self._preprocess_text(str(a["href"]), True),
+                _attachments.append({"name": name, "url": f"{DOMAIN}{path}"})
 
-        result = NoticeDTO(**_dto)
+        _info["content"] = self._preprocess_text(md(_info["content"]))
+        _dto = {"info": _info, "attachments": _attachments}
 
-        return result
+        return NoticeDTO(**_dto)
