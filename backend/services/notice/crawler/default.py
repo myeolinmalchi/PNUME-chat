@@ -89,33 +89,51 @@ class NoticeCrawler(NoticeCrawlerBase):
         return notices
 
     def _parse_detail(self, soup: BeautifulSoup) -> Optional[NoticeDTO]:
-        _dto = {}
-
         for img in soup.select("img"):
             img.extract()
-        elements = {
-            key: soup.select_one(selector)
-            for key, selector in SELECTORs["detail"]["info"].items()
-        }
 
-        _dto["info"] = {
-            key: element.get_text(separator="", strip=True)
-            for key, element in elements.items() if element is not None
-        }
+        _info = {}
+        for key, selector in SELECTORs["detail"]["info"].items():
+            if key in ["title", "content"]:
+                element = soup.select_one(selector)
+                if element is None:
+                    return None
 
-        if "content" not in _dto["info"] or "title" not in _dto["info"]:
-            return None
+                text = element.get_text(separator="", strip=True)
+                if key == "content":
+                    text = self._preprocess_text(md(text))
+                _info[key] = text
+                continue
 
-        att_element = soup.select_one(SELECTORs["detail"]["attachments"])
+            dls = soup.select(selector)
+            for dl in dls:
+                dt = dl.select_one("dt:first-child")
+                dd = dl.select_one("dd:nth-child(2)")
+                if not dt or not dd:
+                    continue
 
-        if att_element is not None:
-            _dto["attachments"] = [{
-                "name": self._preprocess_text(a.text, True),
-                "url": self._preprocess_text(str(a["href"]), True),
-            } for a in att_element.select("a")]
+                category = dt.get_text(separator="", strip=True)
+                content = dd.get_text(separator="", strip=True)
 
-        _dto["info"]["content"] = self._preprocess_text(
-            md(_dto["info"]["content"])
-        )
+                if category in ["작성일", "date"]:
+                    _info["date"] = content
+
+                if category in ["작성자", "name"]:
+                    _info["author"] = content
+
+        attachment_elements = soup.select(SELECTORs["detail"]["attachments"])
+
+        _attachments = []
+        for e in attachment_elements:
+            anchor = e.select_one("a")
+            if not anchor or not anchor.has_attr("href"):
+                continue
+
+            _attachments.append({
+                "name": self._preprocess_text(anchor.text, True),
+                "url": self._preprocess_text(str(anchor["href"]), True),
+            })
+
+        _dto = {"info": _info, "attachments": _attachments}
 
         return NoticeDTO(**_dto)
