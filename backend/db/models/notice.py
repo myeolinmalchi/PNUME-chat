@@ -24,19 +24,17 @@ class NoticeModel(Base):
     title_vector = mapped_column(Vector(N_DIM), nullable=True)
     title_sparse_vector = mapped_column(SPARSEVEC(V_DIM), nullable=True)
 
-    attachments: Mapped[
-        List["AttachmentModel"]
-    ] = relationship(cascade="all,delete", back_populates="notice")
-    content_chunks: Mapped[
-        List["NoticeChunkModel"]
-    ] = relationship(cascade="all,delete", back_populates="notice")
+    attachments: Mapped[List["AttachmentModel"]
+                        ] = relationship(back_populates="notice")
+    content_chunks: Mapped[List["NoticeChunkModel"]
+                           ] = relationship(back_populates="notice")
 
 
 class NoticeChunkModel(Base):
     __tablename__ = "notice_content_chunks"
 
     chunk_id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    notice_id = mapped_column(ForeignKey("notices.id"))
+    notice_id = mapped_column(ForeignKey("notices.id", ondelete="CASCADE"))
     chunk_content = mapped_column(String, nullable=False)
     chunk_vector = mapped_column(Vector(N_DIM))
     chunk_sparse_vector = mapped_column(SPARSEVEC(dim=V_DIM))
@@ -52,7 +50,7 @@ class AttachmentModel(Base):
     __tablename__ = "notice_attachments"
 
     attachment_id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    notice_id = mapped_column(ForeignKey("notices.id"))
+    notice_id = mapped_column(ForeignKey("notices.id", ondelete="CASCADE"))
     name = mapped_column(String, nullable=False)
     url = mapped_column(String, nullable=False)
 
