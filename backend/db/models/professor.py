@@ -4,7 +4,6 @@ from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from db.common import N_DIM, V_DIM, Base
 from sqlalchemy import Enum as SQLEnum
-from db.models.fields import MajorModel, MinorModel
 from enum import Enum
 
 
@@ -14,8 +13,8 @@ class ProfessorModel(Base):
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     seq = mapped_column(Integer, nullable=False)
 
+    department_id = mapped_column(ForeignKey("departments.id"), nullable=False)
     major_id = mapped_column(ForeignKey("majors.id"), nullable=True)
-    minor_id = mapped_column(ForeignKey("minors.id"), nullable=True)
 
     name: Mapped[str] = mapped_column(String, nullable=False)
     name_eng: Mapped[str] = mapped_column(String, nullable=True)
@@ -26,21 +25,34 @@ class ProfessorModel(Base):
     email: Mapped[str] = mapped_column(String, nullable=True)
     lab_addr: Mapped[str] = mapped_column(String, nullable=True)
 
-    major: Mapped["MajorModel"] = relationship(back_populates="professors")
-    minor: Mapped["MinorModel"] = relationship(back_populates="professors")
+    department = relationship("DepartmentModel", back_populates="professors")
+    major = relationship("MajorModel", back_populates="professors")
 
-    fields: Mapped[List["ResearchFieldModel"]
-                   ] = relationship(back_populates="professor")
-    educations: Mapped[List["EducationModel"]
-                       ] = relationship(back_populates="professor")
-    careers: Mapped[List["CareerModel"]
-                    ] = relationship(back_populates="professor")
+    detail: Mapped[str] = mapped_column(String, nullable=True)
+    detail_chunks: Mapped[List["ProfessorDetailChunkModel"]
+                          ] = relationship(back_populates="professor")
 
     __table_args__ = (
-        UniqueConstraint('seq', 'major_id', name='uq_major_seq'),
+        UniqueConstraint('seq', 'department_id', name='uq_department_seq'),
     )
 
 
+class ProfessorDetailChunkModel(Base):
+    __tablename__ = "professor_detail_chunks"
+
+    chunk_id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    professor_id = mapped_column(ForeignKey("professors.id"))
+
+    detail = mapped_column(String, nullable=False)
+    dense_vector = mapped_column(Vector(N_DIM))
+    sparse_vector = mapped_column(SPARSEVEC(dim=V_DIM))
+
+    professor: Mapped["ProfessorModel"] = relationship(
+        back_populates="detail_chunks"
+    )
+
+
+'''
 class ResearchFieldModel(Base):
     """연구분야"""
 
@@ -106,3 +118,4 @@ PROFESSOR_MODEL_MAP = {
     "educations": EducationModel,
     "careers": CareerModel
 }
+'''

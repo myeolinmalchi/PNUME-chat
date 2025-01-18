@@ -1,10 +1,10 @@
-from db.models.fields import MajorModel, MinorModel
+from db.models import MajorModel
 from db.models.professor import ProfessorModel
 from db.repositories.base import BaseRepository
 
 
 class ProfessorRepository(BaseRepository[ProfessorModel]):
-
+    """
     def find_major_minor(self, major: str, minor: MinorModel):
         major_instance = self.session.query(MajorModel).where(
             MajorModel.name == major
@@ -26,3 +26,4 @@ class ProfessorRepository(BaseRepository[ProfessorModel]):
             self.session.flush()
 
         return {"major_id": major_instance.id, "minor_id": minor_instance.id}
+    """

@@ -38,7 +38,8 @@ class TransactionalMetaclass(type):
 
         for attr_name, attr_value in attrs.items():
             if callable(attr_value) and any(
-                attr_name.startswith(prefix) for prefix in transactional_prefixes
+                attr_name.startswith(prefix)
+                for prefix in transactional_prefixes
             ):
                 attrs[attr_name] = cls.add_transactional(attr_value)
 
@@ -51,7 +52,7 @@ class TransactionalMetaclass(type):
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             return transactional(method)(*args, **kwargs)
 
-        wrapper._transactional = True
+        wrapper.__setattr__("_transactional", True)
         return wrapper
 
     @staticmethod
@@ -111,6 +112,12 @@ class BaseRepository(Generic[ModelType], metaclass=TransactionalMetaclass):
         self.session.flush()
         return instance
 
+    def update_all(
+        self, instances: List[ModelType], datas: List[Dict[str, Any]]
+    ):
+        for instance, data in zip(instances, datas):
+            self.update(instance, data)
+
     def delete(self, data: ModelType) -> None:
         self.session.delete(data)
         self.session.flush()
@@ -162,6 +169,7 @@ def transaction():
 
 
 def transactional(func):
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         with transaction():
