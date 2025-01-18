@@ -1,11 +1,11 @@
 import asyncio
 from typing import List
 
-from services.base.embedder import BaseEmbedder
-from services.notice_me.dto import NoticeMEDTO
+from services.base import BaseEmbedder
+from services.notice import NoticeDTO
 
 
-class NoticeMEEmbedder(BaseEmbedder[NoticeMEDTO]):
+class NoticeEmbedder(BaseEmbedder[NoticeDTO]):
 
     async def _embed_all_async(self, items, interval, session):
 
@@ -15,9 +15,9 @@ class NoticeMEEmbedder(BaseEmbedder[NoticeMEDTO]):
 
         parted_notices = list(parts(items, interval))
 
-        notices: List[NoticeMEDTO] = []
+        notices: List[NoticeDTO] = []
 
-        async def embed_partial_async(_notices: List[NoticeMEDTO]):
+        async def embed_partial_async(_notices: List[NoticeDTO]):
             _notices = [notice for notice in _notices if "info" in notice]
             _infos = [notice["info"] for notice in _notices if "info" in notice]
 
@@ -37,7 +37,7 @@ class NoticeMEEmbedder(BaseEmbedder[NoticeMEDTO]):
             )
 
             return [
-                NoticeMEDTO(
+                NoticeDTO(
                     **notice, **{
                         "embeddings": {
                             "title_embeddings": title_vector,

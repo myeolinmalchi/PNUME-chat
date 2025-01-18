@@ -11,6 +11,8 @@ from db.models import *
 
 
 def init_database():
+    raise Exception("DB 마이그레이션은 alembic을 사용하세요.")
+    """
     try:
         engine = get_engine()
         with engine.connect() as conn:
@@ -22,6 +24,7 @@ def init_database():
         Base.metadata.create_all(engine)
     except ProgrammingError as e:
         print(f"Error has been occurred: {e}")
+    """
 
 
 if __name__ == "__main__":
