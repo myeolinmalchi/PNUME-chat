@@ -8,22 +8,24 @@ class AttachmentDTO(TypedDict):
     url: str | None
 
 
-class NoticeMEInfoDTO(TypedDict):
+class NoticeInfoDTO(TypedDict):
     title: str
     content: str
     category: str
+
+    department: str
 
     date: str
     author: str
 
 
-class NoticeMEEmbeddingsDTO(TypedDict):
+class NoticeEmbeddingsDTO(TypedDict):
     title_embeddings: EmbedResult
     content_embeddings: List[EmbedResult]
 
 
-class NoticeMEDTO(TypedDict):
-    seq: int
-    info: NotRequired[NoticeMEInfoDTO]
+class NoticeDTO(TypedDict):
+    url: str
+    info: NotRequired[NoticeInfoDTO]
     attachments: NotRequired[List[AttachmentDTO]]
-    embeddings: NotRequired[NoticeMEEmbeddingsDTO]
+    embeddings: NotRequired[NoticeEmbeddingsDTO]
