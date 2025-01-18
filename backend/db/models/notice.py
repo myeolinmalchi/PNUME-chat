@@ -1,33 +1,20 @@
-from sqlalchemy import Column, Date, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import Date, ForeignKey, Integer, String
 from pgvector.sqlalchemy import Vector, SPARSEVEC
-from enum import Enum
 from sqlalchemy.orm import mapped_column, relationship, Mapped
 from db.common import N_DIM, V_DIM, Base
 from typing import List
-
-
-class UrlEnum(Enum):
-    hakbunotice = "공지/학부"
-    gradnotice = "공지/대학원"
-    supervision = "공지/장학"
-    notice = "공지/홍보"
-    hakbunews = "학부_소식"
-    media = "언론_속_학부"
-    seminar = "세미나"
-    recruit = "취업정보"
 
 
 class NoticeModel(Base):
     __tablename__ = "notices"
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    seq = mapped_column(Integer, nullable=False)
+    url = mapped_column(String, nullable=False, unique=True)
 
-    category = Column(
-        SQLEnum(UrlEnum, values_callable=lambda obj: [e.value for e in obj]),
-        nullable=False,
-    )
+    category = mapped_column(String, nullable=False)
+
+    department_id = mapped_column(ForeignKey("departments.id"), nullable=True)
+    department = relationship("DepartmentModel", back_populates="notices")
 
     title: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
@@ -43,10 +30,6 @@ class NoticeModel(Base):
     content_chunks: Mapped[
         List["NoticeChunkModel"]
     ] = relationship(cascade="all,delete", back_populates="notice")
-
-    __table_args__ = (
-        UniqueConstraint('seq', 'category', name='uq_category_seq'),
-    )
 
 
 class NoticeChunkModel(Base):
