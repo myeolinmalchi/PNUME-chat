@@ -37,15 +37,34 @@ class NoticeCrawler(NoticeCrawlerBase):
         if not url:
             raise ValueError("'url' must be contained")
 
-        _url = f"{url}?row=1000"
+        rows = kwargs.get("rows", 500)
 
-        soup = self._scrape(_url)
+        _url_str = f"{url}?row={rows}"
+        soup = self._scrape(_url_str)
         paths = self._parse_paths(soup)
 
         _url = parse_url(url)
-        _urls = [f"{_url.scheme}://{_url.netloc}{path}" for path in paths]
 
-        return _urls
+        urls = [f"{_url.scheme}://{_url.netloc}{path}" for path in paths]
+        tot_pages = self._parse_pages(soup)
+
+        for page in range(1, tot_pages):
+            _url_str = f"{url}?row={rows}&page={page + 1}"
+            soup = self._scrape(_url_str)
+            paths = self._parse_paths(soup)
+            _urls = [f"{_url.scheme}://{_url.netloc}{path}" for path in paths]
+            urls += _urls
+
+        return urls
+
+    def _parse_pages(self, soup: BeautifulSoup) -> int:
+        pagination_container = soup.select_one(SELECTORs["pagination"])
+        if not pagination_container:
+            return 1
+
+        page_list = pagination_container.select("li")
+
+        return len(page_list)
 
     def _parse_paths(self, soup: BeautifulSoup) -> List[str]:
         table_rows = soup.select(SELECTORs['list'])
