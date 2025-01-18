@@ -2,6 +2,9 @@ from db.repositories import transaction
 
 import asyncio
 from services.notice.service.base import NoticeServiceBase
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class NoticeMEService(NoticeServiceBase):
@@ -16,15 +19,24 @@ class NoticeMEService(NoticeServiceBase):
         interval = kwargs.get('interval', 30)
         from tqdm import tqdm
 
+        reset = kwargs.get("reset", False)
+
+        if reset:
+            affected = self.notice_repo.delete_by_department("기계공학부")
+            logger.info(f"[기계공학부] {affected} rows deleted.")
+
         pbar = tqdm(
             range(0, len(urls), interval),
             total=len(urls),
-            desc=f"[{url_key}]",
+            desc=f"[기계공학부-{url_key}]",
         )
         for st in pbar:
-            ed = st + interval - 1
+            ed = min(st + interval, len(urls))
+            pbar.set_postfix({
+                'range': f"{st + 1} ~ {ed}",
+            })
 
-            _urls = urls[st:ed + 1]
+            _urls = urls[st:ed]
             notices = await self.notice_crawler.scrape_partial_async(
                 urls=_urls, url_key=url_key
             )
@@ -39,9 +51,6 @@ class NoticeMEService(NoticeServiceBase):
             models += notice_models
 
             pbar.update(interval)
-            pbar.set_postfix({
-                'range': f"{st} ~ {ed}",
-            })
 
             await asyncio.sleep(kwargs.get('delay', 0))
 

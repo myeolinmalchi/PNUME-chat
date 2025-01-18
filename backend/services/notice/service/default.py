@@ -43,14 +43,13 @@ class NoticeService(NoticeServiceBase):
             )
 
             for st in pbar:
-                ed = st + interval
+                ed = min(st + interval, len(urls))
                 pbar.set_postfix({'range': f"{st} ~ {ed}"})
 
                 _urls = urls[st:ed]
                 notices = await self.notice_crawler.scrape_partial_async(
                     urls=_urls, category=category, department=department
                 )
-                #if kwargs.get('with_embeddings', True):
                 notices = await self.notice_embedder.embed_all_async(
                     items=notices, interval=interval
                 )
