@@ -2,7 +2,8 @@ from asyncio import Semaphore
 import asyncio
 from contextlib import asynccontextmanager
 from functools import wraps
-from typing import Optional
+from typing import Callable, Optional
+import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -51,3 +52,27 @@ def retry_async(times: int = 10, delay: float = 1.0, is_success=lambda _: True):
     return decorator
 
 
+def retry_sync(
+    times: int = 10, delay: float = 1.0, is_success: Callable = lambda _: True
+):
+
+    def decorator(func):
+
+        @wraps(func)
+        def wrapped(*args, **kwargs):
+            for _ in range(times):
+                try:
+                    result = func(*args, **kwargs)
+                    if not is_success(result):
+                        continue
+
+                    return result
+
+                except Exception:
+                    time.sleep(delay)
+
+            raise TimeoutError(f'{times}번의 재시도에 실패했습니다.')
+
+        return wrapped
+
+    return decorator
