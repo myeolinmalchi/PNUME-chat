@@ -12,6 +12,7 @@
       "취업": "https://japan.pusan.ac.kr/japan/17135/subview.do"
     },
     "불어불문학과": {
+      "공지": "https://french.pusan.ac.kr/french/21555/subview.do",
       "자유": "https://french.pusan.ac.kr/french/21559/subview.do"
     },
     "노어노문학과": {
@@ -42,9 +43,11 @@
       "취업": "https://hanmun.pusan.ac.kr/hanmun/20480/subview.do"
     },
     "언어정보학과": {
+      "공지": "https://linguistics.pusan.ac.kr/linguistics/20939/subview.do", 
       "취업": "https://linguistics.pusan.ac.kr/linguistics/20941/subview.do"
     },
     "사학과": {
+      "사학과": "https://history.pusan.ac.kr/history/17355/subview.do",
       "대학원": "https://history.pusan.ac.kr/history/49309/subview.do"
     },
     "철학과": {
@@ -68,6 +71,7 @@
       "대학원": "https://englishedu.pusan.ac.kr/englishedupnu/38217/subview.do"
     },
     "교육학과": {
+      "공지": "https://ed.pusan.ac.kr/ed/15398/subview.do", 
       "자유": "https://ed.pusan.ac.kr/ed/15401/subview.do"
     },
     "유아교육과": {
@@ -76,32 +80,40 @@
       "취업": "https://child.pusan.ac.kr/child/15987/subview.do"
     },
     "특수교육과": {
+      "공지": "https://special.pusan.ac.kr/special/17389/subview.do", 
       "취업": "https://special.pusan.ac.kr/special/17392/subview.do"
     },
     "일반사회교육과": {
+      "공지": "https://socialedu.pusan.ac.kr/socialedu/20695/subview.do",
       "취업": "https://socialedu.pusan.ac.kr/socialedu/70697/subview.do"
     },
     "역사교육과": {
+      "공지": "https://his.pusan.ac.kr/hisedu/16873/subview.do", 
       "취업": "https://hisedu.pusan.ac.kr/hisedu/16875/subview.do"
     },
     "윤리교육과": {
+      "공지": "https://ethics.pusan.ac.kr/ethics/21795/subview.do", 
       "취업": "https://ethics.pusan.ac.kr/ethics/51289/subview.do"
     },
     "수학교육과": {
+      "공지": "https://mathedu.pusan.ac.kr/mathedu/15093/subview.do", 
       "자유": "https://mathedu.pusan.ac.kr/mathedu/15097/subview.do",
       "취업": "https://mathedu.pusan.ac.kr/mathedu/15098/subview.do"
     },
     "물리교육과": {
+      "공지": "https://physedu.pusan.ac.kr/physedu/16992/subview.do", 
       "취업": "https://physedu.pusan.ac.kr/physedu/21673/subview.do"
     },
     "화학교육과": {
+      "공지": "https://chemedu.pusan.ac.kr/chemedu/20618/subview.do", 
       "취업": "https://chemedu.pusan.ac.kr/chemedu/20623/subview.do"
     },
     "생물교육과": {
-      "학부": "https://edubio.pusan.ac.kr/edubio/21256/subview.do",
+      "공지": "https://edubio.pusan.ac.kr/edubio/21256/subview.do",
       "취업": "https://edubio.pusan.ac.kr/edubio/21266/subview.do"
     },
     "지구과학교육과": {
+      "공지": "https://earth.pusan.ac.kr/earth/23354/subview.do", 
       "취업": "https://earth.pusan.ac.kr/earth/23355/subview.do"
     },
     "체육교육과": {
@@ -174,6 +186,7 @@
       "취업": "https://math.pusan.ac.kr/math/66568/subview.do"
     },
     "통계학과": {
+      "공지": "https://stat.pusan.ac.kr/stat/15128/subview.do", 
       "취업": "https://stat.pusan.ac.kr/stat/15129/subview.do"
     },
     "물리학과": {
