@@ -2,7 +2,8 @@ from asyncio import Semaphore
 import asyncio
 from contextlib import asynccontextmanager
 from functools import wraps
-from typing import Optional
+from typing import Callable, Optional
+import time
 import logging
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ async def semaphore(limit: int = 4):
         raise
 
 
-def retry_async(times: int = 10, delay: float = 1.0):
+def retry_async(times: int = 10, delay: float = 1.0, is_success=lambda _: True):
 
     def decorator(func):
 
@@ -36,9 +37,39 @@ def retry_async(times: int = 10, delay: float = 1.0):
         async def wrapped(*args, **kwargs):
             for _ in range(times):
                 try:
-                    return await func(*args, **kwargs)
+                    result = await func(*args, **kwargs)
+                    if not is_success(result):
+                        continue
+
+                    return result
                 except Exception:
                     await asyncio.sleep(delay)
+
+            raise TimeoutError(f'{times}번의 재시도에 실패했습니다.')
+
+        return wrapped
+
+    return decorator
+
+
+def retry_sync(
+    times: int = 10, delay: float = 1.0, is_success: Callable = lambda _: True
+):
+
+    def decorator(func):
+
+        @wraps(func)
+        def wrapped(*args, **kwargs):
+            for _ in range(times):
+                try:
+                    result = func(*args, **kwargs)
+                    if not is_success(result):
+                        continue
+
+                    return result
+
+                except Exception:
+                    time.sleep(delay)
 
             raise TimeoutError(f'{times}번의 재시도에 실패했습니다.')
 
