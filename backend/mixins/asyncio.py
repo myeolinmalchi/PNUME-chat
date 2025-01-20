@@ -28,7 +28,7 @@ async def semaphore(limit: int = 4):
         raise
 
 
-def retry_async(times: int = 10, delay: float = 1.0):
+def retry_async(times: int = 10, delay: float = 1.0, is_success=lambda _: True):
 
     def decorator(func):
 
@@ -36,7 +36,11 @@ def retry_async(times: int = 10, delay: float = 1.0):
         async def wrapped(*args, **kwargs):
             for _ in range(times):
                 try:
-                    return await func(*args, **kwargs)
+                    result = await func(*args, **kwargs)
+                    if not is_success(result):
+                        continue
+
+                    return result
                 except Exception:
                     await asyncio.sleep(delay)
 
@@ -45,3 +49,5 @@ def retry_async(times: int = 10, delay: float = 1.0):
         return wrapped
 
     return decorator
+
+
