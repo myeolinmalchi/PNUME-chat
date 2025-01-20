@@ -2,52 +2,29 @@
 
 Usage:
     poetry run python3 scripts/crawler/notice.py
-        -i, --interval: 한 번에 스크랩 할 게시글 수 (default: 50)
+        -i, --interval: 한 번에 스크랩 할 게시글 수 (default: 10)
         -d, --delay: Interval간의 딜레이 (초 단위, default: 0)
         -dp, --department: 학과 (default: ALL)
-        -r, --reset: `notices` 테이블 초기화 여부 (default: true)
+        -r, --reset: 테이블 초기화 여부 (default: false)
+        -rw, --rows: 목록 페이지에서 한 번에 불러올 게시글 수 (기계공학부 제외, default: 500)
 """
 
 import argparse
 import asyncio
-from typing import Dict, Literal
+from typing import Dict
 
 from db.repositories import transaction
 import logging
 
-from db.repositories import NoticeRepository, UniversityRepository
-from services.notice import NoticeCrawler, NoticeEmbedder
+from services.notice import create_notice_service
 from services.notice.crawler.default import URLs as DEFAULT_URLs
 from services.notice.crawler.me import URLs as ME_URLs
 
-from services.notice.crawler.me import NoticeMECrawler
-from services.notice.service.default import NoticeService
-
 import logging
-
-from services.notice.service.me import NoticeMEService
 
 import warnings
 
 warnings.filterwarnings("ignore")
-
-
-def init_notice_service(_type: Literal["default", "me"] = "default"):
-    notice_repo = NoticeRepository()
-    notice_embedder = NoticeEmbedder()
-    univ_repo = UniversityRepository()
-    if _type == "default":
-        notice_crawler = NoticeCrawler()
-        notice_service = NoticeService(
-            notice_repo, notice_embedder, notice_crawler, univ_repo
-        )
-    elif _type == "me":
-        notice_crawler = NoticeMECrawler()
-        notice_service = NoticeMEService(
-            notice_repo, notice_embedder, notice_crawler, univ_repo
-        )
-
-    return notice_service
 
 
 @transaction()
@@ -64,8 +41,9 @@ async def main(**kwargs):
 
         _type = "me" if department == "기계공학부" else "default"
 
-        notice_service = init_notice_service(_type)
+        notice_service = create_notice_service(_type)
         reset = kwargs.get("reset", False)
+        rows = kwargs.get("rows", 500)
 
         if _type == "default":
             failed_departments: Dict = {}
@@ -76,14 +54,16 @@ async def main(**kwargs):
                         delay=kwargs.get('delay'),
                         with_embeddings=True,
                         department=deps,
-                        reset=reset
+                        reset=reset,
+                        rows=rows
                     )
                 except Exception as e:
                     failed_departments[department] = e
-                    logging.exception(f"[{deps}] 일시적인 오류가 발생했습니다. ({e})")
+                    logging.exception(f"[{deps}] 일시적인 오류가 발생했습니다.")
                     continue
 
-            logging.info(f"크롤링 실패 학과: {failed_departments}")
+            logging.info(f"{len(failed_departments)}개의 학과 크롤링에 실패했습니다.")
+            logging.info(f"실패 학과: {failed_departments.keys()}")
 
         elif _type == "me":
             for url_key in ME_URLs:
@@ -114,9 +94,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "-dp", "--department", dest="department", action="store", default="ALL"
     )
-
     parser.add_argument(
         "-r", '--reset', dest="reset", action=argparse.BooleanOptionalAction
+    )
+    parser.add_argument(
+        "-rw", '--rows', dest="rows", action="store", default="500"
     )
 
     args = parser.parse_args()
@@ -126,6 +108,7 @@ if __name__ == "__main__":
         "delay": float(args.delay),
         "reset": bool(args.reset),
         "department": str(args.department),
+        "rows": int(args.rows)
     }
 
     asyncio.run(main(**kwargs))

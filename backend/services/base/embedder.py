@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, Generic, List, Optional, TypeVar
+from typing import Dict, Generic, List, NotRequired, Optional, TypeVar, TypedDict
 
 from aiohttp import ClientSession
 import requests
@@ -14,8 +14,8 @@ load_dotenv()
 EMBED_URL = os.environ.get("EMBED_URL")
 
 
-class EmbedResult(Dict):
-    chunk: Optional[str] = None
+class EmbedResult(TypedDict):
+    chunk: NotRequired[str]
     dense: List[float]
     sparse: Dict[int, float]
 
