@@ -10,12 +10,12 @@ from .base import BaseRepository
 
 class NoticeRepository(BaseRepository[NoticeModel]):
 
-    def delete_by_department(self, deps: str):
+    def delete_by_department(self, department: str):
         department = self.session.query(DepartmentModel).filter(
-            DepartmentModel.name == deps
+            DepartmentModel.name == department
         ).one_or_none()
         if department is None:
-            raise ValueError(f"존재하지 않는 학과입니다: {deps}")
+            raise ValueError(f"존재하지 않는 학과입니다: {department}")
 
         affected = self.session.query(NoticeModel).filter(
             NoticeModel.department_id == department.id
