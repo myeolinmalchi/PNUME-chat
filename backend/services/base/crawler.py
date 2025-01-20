@@ -1,13 +1,13 @@
 from abc import abstractmethod
 import asyncio
-from typing import Generic, List, Optional, TypeVar, overload
+from typing import Callable, Generic, List, Optional, TypeVar, overload
 import re
 
 from aiohttp import ClientSession
 import aiohttp
 from requests.sessions import HTTPAdapter
 
-from mixins.asyncio import retry_async
+from mixins.asyncio import retry_async, retry_sync
 from mixins.http_client import HTTPMetaclass
 from bs4 import BeautifulSoup
 import requests
@@ -90,29 +90,39 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         return await asyncio.gather(*[scrape_coroutine(_url) for _url in url])
 
     @overload
-    def _scrape(self, url: str) -> BeautifulSoup:
+    def _scrape(
+        self,
+        url: str,
+        timeout: int = 600,
+        is_success=lambda _: True
+    ) -> BeautifulSoup:
         ...
 
     @overload
     def _scrape(
         self,
         url: List[str],
+        timeout: int = 600,
+        is_success=lambda _: True
     ) -> List[BeautifulSoup]:
         ...
 
-    def _scrape(self, url: str | List[str], timeout: int = 180):
+    def _scrape(
+        self,
+        url: str | List[str],
+        timeout: int = 600,
+        is_success: Callable[[BeautifulSoup], bool] = lambda _: True
+    ):
 
+        @retry_sync(is_success=is_success)
         def scrape(_url):
-            with requests.Session() as session:
-                adapter = HTTPAdapter(max_retries=10)
-                session.mount("https://", adapter)
-                response = session.get(_url, timeout=timeout)
-                if response.status_code == 200:
-                    html = response.text
-                    soup = BeautifulSoup(html, "html5lib")
-                    return soup
+            response = requests.get(_url, timeout=timeout)
+            if response.status_code == 200:
+                html = response.text
+                soup = BeautifulSoup(html, "html5lib")
+                return soup
 
-            raise Exception
+            raise requests.ConnectionError()
 
         if isinstance(url, str):
             return scrape(url)

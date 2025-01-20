@@ -10,12 +10,26 @@ from .base import BaseRepository
 
 class NoticeRepository(BaseRepository[NoticeModel]):
 
-    def delete_by_department(self, deps: str):
+    def find_last_notice(self, department: str, category: str):
+        department_model = self.session.query(DepartmentModel).where(
+            DepartmentModel.name == department
+        ).limit(1).one_or_none()
+
+        if not department_model:
+            raise ValueError(f"({department}) 학과가 존재하지 않습니다.")
+
+        last_notice = self.session.query(NoticeModel).where(
+            NoticeModel.department_id == department_model.id
+            and NoticeModel.category == category
+        ).order_by(NoticeModel.url.desc()).limit(1).one_or_none()
+
+        return last_notice
+    def delete_by_department(self, department: str):
         department = self.session.query(DepartmentModel).filter(
-            DepartmentModel.name == deps
+            DepartmentModel.name == department
         ).one_or_none()
         if department is None:
-            raise ValueError(f"존재하지 않는 학과입니다: {deps}")
+            raise ValueError(f"존재하지 않는 학과입니다: {department}")
 
         affected = self.session.query(NoticeModel).filter(
             NoticeModel.department_id == department.id
