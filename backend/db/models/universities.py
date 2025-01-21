@@ -2,7 +2,7 @@ from typing import List
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from db.common import Base
-
+from buildings import BuildingModel
 
 class UniversityModel(Base):
     """단과대학 테이블"""
