@@ -10,7 +10,6 @@ packages = [{ include = "**/*" }]
 python = "^3.12"
 fastapi = {extras = ["standard"], version = "^0.115.6"}
 uvicorn = "^0.32.0"
-openai = "^1.53.0"
 tiktoken = "^0.8.0"
 psycopg2-binary = "^2.9.10"
 beautifulsoup4 = "^4.12.3"
