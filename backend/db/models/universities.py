@@ -13,7 +13,8 @@ class UniversityModel(Base):
     name = mapped_column(String, nullable=False)
     departments: Mapped[List["DepartmentModel"]
                         ] = relationship(back_populates="university")
-    buildings = relationship("buildingsModel", back_populates="university")
+    buildings = relationship("BuildingModel", back_populates="university")
+    lectures = relationship("BuildingModel", back_populates="university")
 
 
 class DepartmentModel(Base):
@@ -31,7 +32,8 @@ class DepartmentModel(Base):
     majors = relationship("MajorModel", back_populates="department")
     professors = relationship("ProfessorModel", back_populates="department")
     notices = relationship("NoticeModel", back_populates="department")
-    buildings = relationship("buildingsModel", back_populates="department")
+    buildings = relationship("BuildingsModel", back_populates="department")
+    lectures = relationship("LectureModel", back_populates="department")
 
 
 class MajorModel(Base):
@@ -45,4 +47,4 @@ class MajorModel(Base):
 
     department = relationship("DepartmentModel", back_populates="majors")
     professors = relationship("ProfessorModel", back_populates="major")
-    buildings = relationship("buildingsModel", back_populates="major")
+    buildings = relationship("BuildingsModel", back_populates="major")
