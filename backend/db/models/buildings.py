@@ -22,8 +22,3 @@ class BuildingModel(Base):
     department: Mapped[List["DepartmentModel"]] = relationship(
         back_populates="buildings"
     )
-    
-    major_id = mapped_column(ForeingKey=("majors.id"))
-    majors: Mapped[List[MajorModel]] = relationship(
-        back_populates="buildings"
-    )
