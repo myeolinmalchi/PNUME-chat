@@ -26,7 +26,7 @@ class SupportModel:
     content_chunks: Mapped[List["SupportChunkModel"]] = relationship(
         back_populates="support"
     )
-    attachments: Mapped[List["AttachmentModel"]] = relationship(
+    attachments: Mapped[List["SupportAttachmentModel"]] = relationship(
         back_populates="support"
     )
 
