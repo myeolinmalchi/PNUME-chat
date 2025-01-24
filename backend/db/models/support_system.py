@@ -7,7 +7,7 @@ from db.common import Base
 from db.common import N_DIM, V_DIM
 from pgvector.sqlalchemy import Vector, SPARSEVEC
 
-class SupportModel:
+class SupportModel(Base):
     """부산대 학지시"""
     
     __tablaname__ = "supports"
