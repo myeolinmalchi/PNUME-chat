@@ -9,7 +9,10 @@ from db.repositories import NoticeRepository
 
 from db.repositories.university import UniversityRepository
 from services.base import BaseService
-from services.notice import NoticeCrawlerBase, NoticeEmbedder, NoticeDTO
+
+from services.notice.dto import NoticeDTO
+from services.notice.embedder import NoticeEmbedder
+from services.notice.crawler.base import NoticeCrawlerBase
 
 logger = logging.getLogger(__name__)
 

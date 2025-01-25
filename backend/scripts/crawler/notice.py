@@ -13,11 +13,11 @@ import argparse
 import asyncio
 from typing import Dict
 
+from config.config import get_universities
 from db.repositories import transaction
 import logging
 
 from services.notice import create_notice_service
-from services.notice.crawler.default import URLs as DEFAULT_URLs
 from services.notice.crawler.me import URLs as ME_URLs
 
 import logging
@@ -33,9 +33,9 @@ async def main(**kwargs):
     try:
         from itertools import chain
 
+        univs = get_universities()
         department = kwargs.get("department")
-        departments = [[dep for dep in deps.keys()]
-                       for deps in DEFAULT_URLs.values()]
+        departments = [[dep for dep in deps] for deps in univs.values()]
         departments = list(chain(*departments)
                            ) if department == "ALL" else [department]
 
