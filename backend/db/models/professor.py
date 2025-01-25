@@ -3,8 +3,6 @@ from pgvector.sqlalchemy import SPARSEVEC, Vector
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from db.common import N_DIM, V_DIM, Base
-from sqlalchemy import Enum as SQLEnum
-from enum import Enum
 
 
 class ProfessorModel(Base):
@@ -37,7 +35,9 @@ class ProfessorDetailChunkModel(Base):
     __tablename__ = "professor_detail_chunks"
 
     chunk_id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    professor_id = mapped_column(ForeignKey("professors.id"))
+    professor_id = mapped_column(
+        ForeignKey("professors.id", ondelete="CASCADE")
+    )
 
     detail = mapped_column(String, nullable=False)
     dense_vector = mapped_column(Vector(N_DIM))
