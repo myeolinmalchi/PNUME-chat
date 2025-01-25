@@ -55,7 +55,10 @@ class ProfessorMECrawler(ProfessorCrawlerBase):
 
         return seqs
 
-    async def _scrape_partial_async(self, seqs, session, **kwargs):
+    async def _scrape_partial_async(self, session, **kwargs):
+        seqs = kwargs.get("seqs")
+        if not seqs:
+            raise ValueError("'seqs' must be contained")
         _urls = [f"{DETAIL_URL}?seq={seq}" for seq in seqs]
 
         soups = await self._scrape_async(_urls, session=session)
@@ -146,7 +149,7 @@ class ProfessorMECrawler(ProfessorCrawlerBase):
         for st_idx in pbar:
             ed_idx = st_idx + interval
             _seqs = seqs[st_idx:ed_idx]
-            professors = await self.scrape_partial_async(_seqs, session=session)
+            professors = await self.scrape_partial_async(session, seqs=_seqs)
             results += professors
 
             pbar.update(interval)
