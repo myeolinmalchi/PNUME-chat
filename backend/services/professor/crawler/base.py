@@ -1,5 +1,7 @@
-from services.base.crawler import BaseCrawler
+from abc import abstractmethod
+from typing import List
 from services.professor import ProfessorDTO
+from services.base.crawler import BaseCrawler
 
 EDU_KEYWORDS = {
     "학사": ["학사", "학부", "B.S", "BS"],
@@ -10,4 +12,7 @@ EDU_KEYWORDS = {
 
 
 class ProfessorCrawlerBase(BaseCrawler[ProfessorDTO]):
-    pass
+
+    @abstractmethod
+    def scrape_urls(self, **kwargs) -> List[str]:
+        pass

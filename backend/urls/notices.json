@@ -118,6 +118,15 @@
     },
     "체육교육과": {
       "학부": "https://physicaledu.pusan.ac.kr/physicaledu/21846/subview.do"
+    }, 
+    "독어교육과": {
+      "학부": "https://geredu.pusan.ac.kr/geredu/21925/subview.do"
+    }, 
+    "불어교육과": {
+      "학부": "https://fredu.pusan.ac.kr/fredu/21987/subview.do"
+    }, 
+    "지리교육과": {
+      "학부": "https://geoedu.pusan.ac.kr/geoedu/21599/subview.do"
     }
   },
   "의과대학": {
@@ -125,37 +134,11 @@
       "대학원": "https://medicine.pusan.ac.kr/medicine/11965/subview.do"
     }
   },
-  "치의학대학원": {
-    "치의학전문대학원": {
-      "기타": "https://dent.pusan.ac.kr/newdent/53492/subview.do"
-    }
-  },
-  "한의학대학원": {
-    "한의학전문대학원": {
-      "기타": "https://kmed.pusan.ac.kr/kmed/13887/subview.do",
-      "취업": "https://kmed.pusan.ac.kr/kmed/54499/subview.do"
-    }
-  },
-  "약학대학": {
-    "약학과": {
-      "학부": "https://pharmacy.pusan.ac.kr/pharmacy/13582/subview.do",
-      "대학원": "https://pharmacy.pusan.ac.kr/pharmacy/49158/subview.do"
-    }
-  },
   "간호대학": {
     "간호학과": {
       "학부": "https://nursing.pusan.ac.kr/nursing/14523/subview.do",
       "대학원": "https://nursing.pusan.ac.kr/nursing/14524/subview.do",
       "취업": "https://nursing.pusan.ac.kr/nursing/49322/subview.do"
-    }
-  },
-  "법학대학원": {
-    "법학과일반대학원": {
-      "자유": "https://collegeoflaw.pusan.ac.kr/collegeoflaw/19584/subview.do",
-      "취업": "https://collegeoflaw.pusan.ac.kr/collegeoflaw/19585/subview.do"
-    },
-    "법학전문대학원": {
-      "취업": "https://law.pusan.ac.kr/law/19753/subview.do"
     }
   },
   "사회과학대학": {
@@ -177,6 +160,13 @@
     "미디어커뮤니케이션학과": {
       "학부": "https://comm.pusan.ac.kr/comm/16750/subview.do",
       "대학원": "https://comm.pusan.ac.kr/comm/16751/subview.do"
+    }, 
+    "정치외교학과": {
+      "공지": "https://polsci.pusan.ac.kr/polsci/15686/subview.do", 
+      "자유": "https://polsci.pusan.ac.kr/polsci/15687/subview.do"
+    },
+    "사회복지학과": {
+      "공지": "https://swf.pusan.ac.kr/swf/16699/subview.do"
     }
   },
   "자연과학대학": {
@@ -217,12 +207,12 @@
     "해양학과": {
       "장학": "https://ocean.pusan.ac.kr/ocean/15783/subview.do",
       "취업": "https://ocean.pusan.ac.kr/ocean/15779/subview.do"
+    }, 
+    "분자생물학과": {
+      "공지": "https://molbiology.pusan.ac.kr/molbiology/19994/subview.do"
     }
   },
   "경제통상대학": {
-    "경제통상대학 공지사항": {
-      "취업": "https://econtr.pusan.ac.kr/econtr/14430/subview.do"
-    },
     "무역학부": {
       "학부": "https://pnutrade.pusan.ac.kr/pnutrade/16955/subview.do",
       "대학원": "https://pnutrade.pusan.ac.kr/pnutrade/16956/subview.do",
@@ -236,6 +226,9 @@
       "학부": "https://convention.pusan.ac.kr/convention/16780/subview.do",
       "대학원": "https://convention.pusan.ac.kr/convention/40386/subview.do",
       "취업": "https://convention.pusan.ac.kr/convention/16781/subview.do"
+    }, 
+    "공공정책학부": {
+      "공지": "https://ppm.pusan.ac.kr/ppm/17493/subview.do"
     }
   },
   "경영대학": {
@@ -246,17 +239,28 @@
       "장학": "https://biz.pusan.ac.kr/biz/48589/subview.do"
     }
   },
-  "국제대학원": {
-    "국제전문대학원": {
-      "기타": "https://graduate.pusan.ac.kr/gsis/52006/subview.do"
-    }
-  },
   "예술대학": {
     "음악학과": {
       "취업": "https://music.pusan.ac.kr/music/16187/subview.do"
     },
     "예술문화영상학과": {
+      "공지": "https://artimage.pusan.ac.kr/artimage/16476/subview.do",
       "자유": "https://artimage.pusan.ac.kr/artimage/16480/subview.do"
+    }, 
+    "한국음악학과": {
+      "공지": "https://gukak.pusan.ac.kr/gukak/20347/subview.do"
+    }, 
+    "미술학과": {
+      "공지": "https://pnuart.pusan.ac.kr/pnuart/20095/subview.do"
+    },
+    "조형학과": {
+      "공지": "https://plarts.pusan.ac.kr/plarts/22177/subview.do"
+    },
+    "디자인학과": {
+      "공지": "https://design.pusan.ac.kr/design/16811/subview.do"
+    },
+    "무용학과": {
+      "공지":"https://dance.pusan.ac.kr/dance/21024/subview.do"
     }
   },
   "생명자원과학대학": {
@@ -264,6 +268,9 @@
       "취업": "https://his.pusan.ac.kr/horticulture/21122/subview.do",
       "자유": "https://his.pusan.ac.kr/horticulture/21131/subview.do"
     },
+    "식물생명과학과": [
+      "https://plant.pusan.ac.kr/plant/21355/subview.do"
+    ],
     "동물생명자원과학과": {
       "취업": "https://animal.pusan.ac.kr/animal/16620/subview.do"
     },
@@ -278,6 +285,18 @@
     },
     "IT응용공학과": {
       "취업": "https://ite.pusan.ac.kr/ite/16028/subview.do"
+    }, 
+    "식품공학과": {
+      "공지": "https://fst.pusan.ac.kr/fst/20152/subview.do"
+    }, 
+    "생명환경화학과": {
+      "공지": "https://pnu-lseb.pusan.ac.kr/pnu-lseb/21666/subview.do"
+    },
+    "조경학과": {
+      "공지": "https://la.pusan.ac.kr/la/20545/subview.do"
+    },
+    "바이오환경에너지학과": {
+      "공지": "https://his.pusan.ac.kr/bee/19926/subview.do"
     }
   },
   "공과대학": {
@@ -339,9 +358,6 @@
     }
   },
   "나노과학기술대학": {
-    "나노과학기술대학": {
-      "장학": "https://nano.pusan.ac.kr/nano/14201/subview.do"
-    },
     "나노메카트로닉스공학과": {
       "장학": "https://nanomecha.pusan.ac.kr/nanomecha/16508/subview.do",
       "취업": "https://nanomecha.pusan.ac.kr/nanomecha/16509/subview.do"
@@ -383,20 +399,14 @@
     },
     "스포츠과학과": {
       "취업": "https://sportscience.pusan.ac.kr/sportscience/14564/subview.do"
+    }, 
+    "의류학과": {
+      "공지": "https://fashion.pusan.ac.kr/fashion/17222/subview.do"
     }
   },
   "협동과정대학원": {
-    "여성연구소": {
-      "정기학술대회": "https://women.pusan.ac.kr/women/73166/subview.do",
-      "심포지엄": "https://women.pusan.ac.kr/women/73167/subview.do",
-      "포럼": "https://women.pusan.ac.kr/women/73168/subview.do",
-      "세미나": "https://women.pusan.ac.kr/women/73169/subview.do",
-      "시민강좌": "https://women.pusan.ac.kr/women/73413/subview.do"
-    },
-    "외국어로서의한국어교육전공": {
-      "취업": "https://edukorean.pusan.ac.kr/edukorean/20043/subview.do"
-    },
     "예술문화영상학과": {
+      "공지": "https://artimage.pusan.ac.kr/artimage/16476/subview.do", 
       "자유": "https://artimage.pusan.ac.kr/artimage/16480/subview.do"
     }
   }

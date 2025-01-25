@@ -1,28 +1,9 @@
-from typing import List, NotRequired, TypedDict, Literal
+from typing import List, NotRequired, Required, TypedDict
 
 from services.base import EmbedResult
 
 
-class ResearchFieldDTO(TypedDict):
-    seq: int
-    name: str
-    embeddings: NotRequired[EmbedResult]
-
-
-class EducationDTO(TypedDict):
-    seq: int
-    name: str
-    edu_type: NotRequired[Literal["학사", "석사", "박사", "석박사통합"]]
-    embeddings: NotRequired[EmbedResult]
-
-
-class CareerDTO(TypedDict):
-    seq: int
-    name: str
-    embeddings: NotRequired[EmbedResult]
-
-
-class ProfessorBasicInfoDTO(TypedDict):
+class ProfessorInfoDTO(TypedDict):
     name: str
     name_eng: NotRequired[str]
 
@@ -32,17 +13,13 @@ class ProfessorBasicInfoDTO(TypedDict):
     email: NotRequired[str]
     lab_addr: NotRequired[str]
 
-    major: str
-    minor: NotRequired[str]
+    detail: NotRequired[str]
+
+    department: str
+    major: NotRequired[str]
 
 
-class ProfessorAdditionalInfoDTO(TypedDict):
-    fields: NotRequired[List[ResearchFieldDTO]]
-    educations: NotRequired[List[EducationDTO]]
-    careers: NotRequired[List[CareerDTO]]
-
-
-class ProfessorDTO(TypedDict):
-    seq: int
-    basic_info: ProfessorBasicInfoDTO
-    additional_info: ProfessorAdditionalInfoDTO
+class ProfessorDTO(TypedDict, total=False):
+    url: Required[str]
+    info: Required[ProfessorInfoDTO]
+    embeddings: NotRequired[List[EmbedResult]]

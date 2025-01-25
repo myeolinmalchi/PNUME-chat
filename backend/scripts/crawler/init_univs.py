@@ -1,22 +1,19 @@
-import json
-
+from config.config import get_universities
 from db.models.universities import DepartmentModel, UniversityModel
 from db.repositories.base import transaction
 from db.repositories.university import UniversityRepository
-
-URLs = {}
-
-with open('urls/notices.json') as f:
-    URLs = json.load(f)
 
 
 @transaction()
 def run():
     models = []
-    for university, departments in URLs.items():
+
+    univs = get_universities()
+
+    for university, departments in univs.items():
+
         departments = [
-            DepartmentModel(name=department)
-            for department in departments.keys()
+            DepartmentModel(name=department) for department in departments
         ]
 
         model = UniversityModel(name=university, departments=departments)

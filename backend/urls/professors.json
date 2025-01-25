@@ -1,0 +1,335 @@
+{
+  "간호대학": {
+    "간호학과": [
+      "https://nursing.pusan.ac.kr/nursing/14496/subview.do"
+    ]
+  },
+  "경영대학": {
+    "경영학과": [
+      "https://biz.pusan.ac.kr/biz/14313/subview.do",
+      "https://biz.pusan.ac.kr/biz/14314/subview.do",
+      "https://biz.pusan.ac.kr/biz/14315/subview.do",
+      "https://biz.pusan.ac.kr/biz/14315/subview.do",
+      "https://biz.pusan.ac.kr/biz/14317/subview.do",
+      "https://biz.pusan.ac.kr/biz/14318/subview.do",
+      "https://biz.pusan.ac.kr/biz/14318/subview.do"
+    ]
+  },
+  "경제통상대학": {
+    "무역학부": [
+      "https://pnutrade.pusan.ac.kr/pnutrade/16937/subview.do"
+    ],
+    "경제학부": [
+      "https://pnuecon.pusan.ac.kr/pnuecon/16315/subview.do"
+    ],
+    "관광컨벤션학과": [
+      "https://convention.pusan.ac.kr/convention/16771/subview.do"
+    ],
+    "공공정책학부": [
+      "https://ppm.pusan.ac.kr/ppm/17477/subview.do"
+    ]
+  },
+  "공과대학": {
+    "고분자공학과": [
+      "https://polymer.pusan.ac.kr/polymer/16520/subview.do"
+    ],
+    "유기소재시스템공학과": [
+      "https://omse.pusan.ac.kr/omse/16210/subview.do"
+    ],
+    "환경공학과": [
+      "https://pnuenv.pusan.ac.kr/pnuenv/15151/subview.do"
+    ],
+    "화공생명공학과": [
+      "https://chemeng.pusan.ac.kr/chemeng/15714/subview.do"
+    ],
+    "전자공학과": [
+      "https://ee.pusan.ac.kr/ee/professors.do"
+    ],
+    "전기공학과": [
+      "https://eec.pusan.ac.kr/eehome/53010/subview.do",
+      "https://eec.pusan.ac.kr/eehome/53010/subview.do"
+    ],
+    "조선해양공학과": [
+      "https://his.pusan.ac.kr/naoe/15316/subview.do"
+    ],
+    "재료공학부": [
+      "https://mse.pusan.ac.kr/mse/38583/subview.do"
+    ],
+    "산업공학과": [
+      "https://ie.pusan.ac.kr/ie/index.do"
+    ],
+    "항공우주공학과": [
+      "https://aerospace.pusan.ac.kr/aerospace/16332/subview.do"
+    ],
+    "건축공학과": [
+      "https://archieng.pusan.ac.kr/_archieng/20245/subview.do"
+    ],
+    "건축학과": [
+      "https://archi.pusan.ac.kr/archi/index..do"
+    ],
+    "도시공학과": [
+      "https://urban.pusan.ac.kr/urban/17048/subview.do"
+    ],
+    "사회기반시스템공학과": [
+      "https://civil.pusan.ac.kr/civil/16263/subview.do"
+    ]
+  },
+  "나노과학기술대학": {
+    "나노메카트로닉스공학과": [
+      "https://nanomecha.pusan.ac.kr/nanomecha/74298/subview.do"
+    ],
+    "나노에너지공학과": [
+      "https://energy.pusan.ac.kr/energy/15615/subview.do"
+    ],
+    "광메카트로닉스공학과": [
+      "https://ome.pusan.ac.kr/ome/16644/subview.do"
+    ]
+  },
+  "사범대학": {
+    "국어교육과": [
+      "https://koredu.pusan.ac.kr/koredu/26208/subview.do"
+    ],
+    "영어교육과": [
+      "https://englishedu.pusan.ac.kr/englishedupnu/38200/subview.do"
+    ],
+    "독어교육과": [
+      "https://geredu.pusan.ac.kr/geredu/21910/subview.do"
+    ],
+    "불어교육과": [
+      "https://fredu.pusan.ac.kr/fredu/21974/subview.do"
+    ],
+    "교육학과": [
+      "https://ed.pusan.ac.kr/ed/15370/subview.do"
+    ],
+    "유아교육과": [
+      "https://child.pusan.ac.kr/child/15952/subview.do"
+    ],
+    "특수교육과": [
+      "https://special.pusan.ac.kr/special/17375/subview.do"
+    ],
+    "일반사회교육과": [
+      "https://socialedu.pusan.ac.kr/socialedu/20689/subview.do"
+    ],
+    "역사교육과": [
+      "https://hisedu.pusan.ac.kr/hisedu/16834/subview.do"
+    ],
+    "지리교육과": [
+      "https://geoedu.pusan.ac.kr/geoedu/21594/subview.do"
+    ],
+    "윤리교육과": [
+      "https://ethics.pusan.ac.kr/ethics/21789/subview.do"
+    ],
+    "수학교육과": [
+      "https://mathedu.pusan.ac.kr/mathedu/64436/subview.do"
+    ],
+    "물리교육과": [
+      "https://physedu.pusan.ac.kr/physedu/16988/subview.do"
+    ],
+    "화학교육과": [
+      "https://chemedu.pusan.ac.kr/chemedu/20607/subview.do"
+    ],
+    "생물교육과": [
+      "https://edubio.pusan.ac.kr/edubio/21250/subview.do"
+    ],
+    "지구과학교육과": [
+      "https://earth.pusan.ac.kr/earth/index.do"
+    ],
+    "체육교육과": [
+      "https://physicaledu.pusan.ac.kr/physicaledu/21843/subview.do"
+    ]
+  },
+  "사회과학대학": {
+    "행정학과": [
+      "https://pub-adm.pusan.ac.kr/pub-adm/15281/subview.do"
+    ],
+    "정치외교학과": [
+      "https://polsci.pusan.ac.kr/polsci/15649/subview.do"
+    ],
+    "사회복지학과": [
+      "https://swf.pusan.ac.kr/swf/16682/subview.do"
+    ],
+    "사회학과": [
+      "https://soc.pusan.ac.kr/soc/42027/subview.do"
+    ],
+    "심리학과": [
+      "https://psy.pusan.ac.kr/psy/15482/subview.do"
+    ],
+    "문헌정보학과": [
+      "https://lais.pusan.ac.kr/lais/62729/subview.do"
+    ],
+    "미디어커뮤니케이션학과": [
+      "https://comm.pusan.ac.kr/comm/16722/subview.do"
+    ]
+  },
+  "생명자원과학대학": {
+    "식물생명과학과": [
+      "https://plant.pusan.ac.kr/plant/21355/subview.do"
+    ],
+    "원예생명과학과": [
+      "https://his.pusan.ac.kr/horticulture/21111/subview.do"
+    ],
+    "동물생명자원과학과": [
+      "https://animal.pusan.ac.kr/animal/16600/subview.do"
+    ],
+    "식품공학과": [
+      "https://fst.pusan.ac.kr/fst/20140/subview.do"
+    ],
+    "생명환경화학과": [
+      "https://pnu-lseb.pusan.ac.kr/pnu-lseb/21646/subview.do"
+    ],
+    "바이오소재과학과": [
+      "https://bm.pusan.ac.kr/bm/16394/subview.do"
+    ],
+    "바이오산업기계공학과": [
+      "https://bime.pusan.ac.kr/bime/19525/subview.do",
+      "https://bime.pusan.ac.kr/bime/19533/subview.do",
+      "https://bime.pusan.ac.kr/bime/65989/subview.do",
+      "https://bime.pusan.ac.kr/bime/70854/subview.do",
+      "https://bime.pusan.ac.kr/bime/72770/subview.do"
+    ],
+    "조경학과": [
+      "https://la.pusan.ac.kr/la/20537/subview.do"
+    ],
+    "식품자원경제학과": [
+      "https://agecon.pusan.ac.kr/agecon/20872/subview.do"
+    ],
+    "IT응용공학과": [
+      "https://ite.pusan.ac.kr/ite/16020/subview.do"
+    ],
+    "바이오환경에너지학과": [
+      "https://bee.pusan.ac.kr/bee/19913/subview.do"
+    ]
+  },
+  "생활과학대학": {
+    "아동가족학과": [
+      "https://cdfs.pusan.ac.kr/cdfs/17249/subview.do"
+    ],
+    "의류학과": [
+      "https://fashion.pusan.ac.kr/fashion/17194/subview.do"
+    ],
+    "식품영양학과": [
+      "https://fsn.pusan.ac.kr/fsn/15431/subview.do"
+    ],
+    "실내환경디자인학과": [
+      "https://hid.pusan.ac.kr/hid/17448/subview.do"
+    ],
+    "스포츠과학과": [
+      "https://sportscience.pusan.ac.kr/sportscience/14540/subview.do"
+    ]
+  },
+  "예술대학": {
+    "음악학과": [
+      "https://music.pusan.ac.kr/music/16160/subview.do"
+    ],
+    "한국음악학과": [
+      "https://gukak.pusan.ac.kr/gukak/20361/subview.do"
+    ],
+    "미술학과": [
+      "https://pnuart.pusan.ac.kr/pnuart/20090/subview.do"
+    ],
+    "조형학과": [
+      "https://plarts.pusan.ac.kr/plarts/22168/subview.do"
+    ],
+    "디자인학과": [
+      "https://design.pusan.ac.kr/design/32448/subview.do",
+      "https://design.pusan.ac.kr/design/32449/subview.do",
+      "https://design.pusan.ac.kr/design/32450/subview.do", 
+      "https://design.pusan.ac.kr/design/16804/subview.do"
+    ],
+    "무용학과": [],
+    "예술문화영상학과": [
+      "https://artimage.pusan.ac.kr/artimage/16460/subview.do"
+    ]
+  },
+  "의과대학": {
+    "의학과": [
+      "https://medicine.pusan.ac.kr/medicine/11972/subview.do",
+      "https://medicine.pusan.ac.kr/medicine/11988/subview.do"
+    ]
+  },
+  "인문대학": {
+    "고고학과": [
+      "https://archaeology.pusan.ac.kr/archaeology/21061/subview.do"
+    ],
+    "국어국문학과": [
+      "https://bkorea.pusan.ac.kr/bkorea/16901/subview.do"
+    ],
+    "일어일문학과": [
+      "https://japan.pusan.ac.kr/japan/17099/subview.do"
+    ],
+    "불어불문학과": [
+      "https://french.pusan.ac.kr/french/21541/subview.do"
+    ],
+    "노어노문학과": [
+      "https://russia.pusan.ac.kr/russia/22118/subview.do"
+    ],
+    "중어중문학과": [
+      "https://china.pusan.ac.kr/china/26528/subview.do"
+    ],
+    "영어영문학과": [
+      "https://pnuenglish.pusan.ac.kr/pnuenglish/15927/subview.do"
+    ],
+    "독어독문학과": [
+      "https://german.pusan.ac.kr/german/25186/subview.do"
+    ],
+    "한문학과": [
+      "https://hanmun.pusan.ac.kr/hanmun/20462/subview.do"
+    ],
+    "언어정보학과": [
+      "https://linguistics.pusan.ac.kr/linguistics/20934/subview.do"
+    ],
+    "사학과": [
+      "https://history.pusan.ac.kr/history/66022/subview.do"
+    ],
+    "철학과": [
+      "https://philosophy.pusan.ac.kr/philosophy/17282/subview.do"
+    ]
+  },
+  "자연과학대학": {
+    "수학과": [
+      "https://math.pusan.ac.kr/math/15567/subview.do"
+    ],
+    "통계학과": [
+      "https://stat.pusan.ac.kr/stat/15119/subview.do"
+    ],
+    "물리학과": [
+      "https://phys.pusan.ac.kr/phys/14905/subview.do"
+    ],
+    "화학과": [
+      "https://chem.pusan.ac.kr/chem/15232/subview.do",
+      "https://chem.pusan.ac.kr/chem/15233/subview.do",
+      "https://chem.pusan.ac.kr/chem/15234/subview.do",
+      "https://chem.pusan.ac.kr/chem/15235/subview.do",
+      "https://chem.pusan.ac.kr/chem/15236/subview.do"
+    ],
+    "생명과학과": [
+      "https://biology.pusan.ac.kr/biology/16042/subview.do"
+    ],
+    "미생물학과": [
+      "https://microbio.pusan.ac.kr/microbio/15842/subview.do"
+    ],
+    "분자생물학과": [
+      "https://molbiology.pusan.ac.kr/molbiology/19986/subview.do"
+    ],
+    "지질환경과학과": [
+      "https://geology.pusan.ac.kr/geology/15527/subview.do"
+    ],
+    "대기환경과학과": [
+      "https://atmos.pusan.ac.kr/atmos/15894/subview.do"
+    ],
+    "해양학과": [
+      "https://ocean.pusan.ac.kr/ocean/15764/subview.do"
+    ]
+  },
+  "정보의생명공학대학": {
+    "정보컴퓨터공학부": [
+      "https://cse.pusan.ac.kr/cse/14640/subview.do"
+    ],
+    "의생명융합공학부": [
+      "https://bce.pusan.ac.kr/bce/50183/subview.do"
+    ]
+  }, 
+  "협동과정대학원": {
+    "예술문화영상학과": ["https://artimage.pusan.ac.kr/artimage/16460/subview.do"]
+  }
+}
