@@ -1,8 +1,40 @@
-from db.models.universities import DepartmentModel, UniversityModel
+from db.models.universities import DepartmentModel, MajorModel, UniversityModel
 from db.repositories.base import BaseRepository
 
 
 class UniversityRepository(BaseRepository[UniversityModel]):
+
+    def create_all(self, objects):
+        results = []
+        for univ in objects:
+            univ_model = self.session.query(UniversityModel).filter(
+                UniversityModel.name == univ.name
+            ).first()
+
+            if not univ_model:
+                result = super().create(univ)
+                results.append(result)
+                continue
+
+            departments = []
+            for d in univ.departments:
+                exists = self.session.query(DepartmentModel).filter(
+                    DepartmentModel.name == d.name
+                ).first()
+
+                if exists:
+                    continue
+
+                d.university_id = univ_model.id
+                departments.append(d)
+
+            self.session.add_all(departments)
+            self.session.flush()
+            self.session.refresh(univ_model)
+
+            results.append(univ_model)
+
+        return results
 
     def find_department_by_name(self, name: str):
         result = self.session.query(DepartmentModel).where(
