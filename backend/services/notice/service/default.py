@@ -1,8 +1,9 @@
+from tqdm import tqdm
+from config.config import get_notice_urls
 from db.repositories import transaction
 
 import asyncio
-from services.notice.crawler.default import URLs
-from services.notice.service import NoticeServiceBase
+from services.notice.service.base import NoticeServiceBase
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,18 +19,13 @@ class NoticeService(NoticeServiceBase):
 
         models = []
 
-        url_dict = {}
-        for departments in URLs.values():
-            if department in departments:
-                url_dict = departments[department]
-                break
+        url_dict = get_notice_urls(department)
 
         reset = kwargs.get("reset", False)
         if reset:
             affected = self.notice_repo.delete_by_department(department)
             logger.info(f"[{department}] {affected} rows deleted.")
 
-        from tqdm import tqdm
         interval = kwargs.get('interval', 30)
         rows = kwargs.get('rows', 500)
 

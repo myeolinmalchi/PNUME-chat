@@ -19,7 +19,7 @@ class NoticeEmbedder(BaseEmbedder[NoticeDTO]):
 
         async def embed_partial_async(_notices: List[NoticeDTO]):
             _notices = [notice for notice in _notices if "info" in notice]
-            _infos = [notice["info"] for notice in _notices if "info" in notice]
+            _infos = [notice["info"] for notice in _notices]
 
             titles_coroutine = self._embed_async(
                 texts=[_info["title"] for _info in _infos],

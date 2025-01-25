@@ -1,7 +1,7 @@
 from db.repositories import transaction
 
 import asyncio
-from services.notice import NoticeServiceBase
+from services.notice.service.base import NoticeServiceBase
 
 import logging
 
