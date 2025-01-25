@@ -1,89 +1,128 @@
-from typing import Optional
 from pgvector.sqlalchemy import SparseVector
-
+from config.config import get_professor_urls
 from db.common import V_DIM
-from db.models import ProfessorModel, PROFESSOR_MODEL_MAP
-from db.repositories import transaction, ProfessorRepository
+from db.models import ProfessorModel
+from db.models.professor import ProfessorDetailChunkModel
+from db.repositories import transaction, ProfessorRepository, UniversityRepository
 
 from services.base import BaseService
-from services.professor import ProfessorDTO, ProfessorEmbedder, ProfessorMECrawler
-from services.professor.crawler.base import ProfessorCrawlerBase
+from services.professor.embedder import ProfessorEmbedder
+from services.professor.crawler import ProfessorCrawlerBase
+from services.professor.dto import ProfessorDTO
+
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
 
     def __init__(
-        self,
-        professor_repo: ProfessorRepository,
+        self, professor_repo: ProfessorRepository,
         professor_embedder: ProfessorEmbedder,
-        professor_crawler: ProfessorCrawlerBase,
+        professor_crawler: ProfessorCrawlerBase, univ_repo: UniversityRepository
     ):
         self.professor_repo = professor_repo
         self.professor_crawler = professor_crawler
         self.professor_embedder = professor_embedder
+        self.univ_repo = univ_repo
 
+    def parse_embeddings(self, dto):
+        embeddings = dto.get("embeddings")
+        return {
+            "detail_chunks": [
+                ProfessorDetailChunkModel(
+                    detail=e["chunk"],
+                    dense_vector=e["dense"],
+                    sparse_vector=SparseVector(e["sparse"], V_DIM)
+                )
+            ]
+            for e in embeddings
+        } if embeddings else {}
+
+    @transaction()
     def dto2orm(self, dto: ProfessorDTO):
-        _professor = {**dto["basic_info"]}
+        info = dto["info"]
+        _professor = {**info}
 
-        major_minor = self.professor_repo.find_major_minor(
-            _professor["major"], _professor["minor"]
-        )
+        department = info["department"]
+        department_model = self.univ_repo.find_department_by_name(department)
 
-        del _professor["major"]
-        del _professor["minor"]
+        if "major" in info:
+            major_model = self.univ_repo.find_major(
+                department=department, name=info["major"]
+            )
+            _professor["major_id"] = major_model.id
+            del _professor["major"]
 
-        _professor = {**_professor, **major_minor}
+        del _professor["department"]
+        _professor["department_id"] = department_model.id
+        _professor["url"] = dto["url"]
 
-        def dict2dict(_dict: dict):
-            return {
-                **({
-                    k: v
-                    for k, v in _dict.items() if k != "seq" and k != "embeddings"
-                }),
-                **({
-                    "dense_vector": _dict["embeddings"]["dense"],
-                    "sparse_vector": SparseVector(
-                        _dict["embeddings"]["sparse"], V_DIM
-                    )
-                } if "embeddings" in _dict else {})
-            }
+        _embeddings = self.parse_embeddings(dto)
 
-        for key in dto["additional_info"].keys():
-            Model = PROFESSOR_MODEL_MAP[key]
-            _infos = [dict2dict(info) for info in dto["additional_info"][key]]
-            _professor[key] = [Model(**info) for info in _infos]
-
-        return ProfessorModel(**_professor, seq=dto["seq"])
+        return ProfessorModel(**_professor, **_embeddings)
 
     def orm2dto(self, orm) -> ProfessorDTO:
         ...
 
     @transaction()
     async def run_full_crawling_pipeline_async(self, **kwargs):
-        professors = await self.professor_crawler.scrape_all_async(
-            interval=kwargs.get('interval', 10), delay=kwargs.get('delay', 0)
-        )
-        professors = await self.professor_embedder.embed_all_async(professors)
-        professors = [self.dto2orm(p) for p in professors]
-        professors = self.professor_repo.create_all(professors)
+        interval = kwargs.get("interval", 30)
+        delay = kwargs.get("delay", 0)
+        department = kwargs.get("department")
 
-        return professors
+        if not department:
+            raise ValueError("'department' must be contained")
 
+        from tqdm import tqdm
 
-def create_professor_me_service(
-    professor_repo: Optional[ProfessorRepository] = None,
-    professor_crawler: Optional[ProfessorCrawlerBase] = None,
-    professor_embedder: Optional[ProfessorEmbedder] = None
-):
-    professor_repo = ProfessorRepository(
-    ) if not professor_repo else professor_repo
-    professor_crawler = ProfessorMECrawler(
-    ) if not professor_crawler else professor_crawler
-    professor_embedder = ProfessorEmbedder(
-    ) if not professor_embedder else professor_embedder
+        models = []
 
-    professor_service = ProfessorService(
-        professor_repo, professor_embedder, professor_crawler
-    )
+        urls = get_professor_urls(department)
 
-    return professor_service
+        try:
+
+            _urls = []
+            for url in urls:
+                _urls += self.professor_crawler.scrape_urls(url=url)
+
+            _urls = list(set(_urls))
+
+            pbar = tqdm(
+                range(0, len(_urls), interval),
+                total=len(_urls),
+                desc=f"[{department}]"
+            )
+
+            for st in pbar:
+                ed = min(st + interval, len(_urls))
+                pbar.set_postfix({'range': f"{st + 1} ~ {ed}"})
+
+                __urls = _urls[st:ed]
+                professors = await self.professor_crawler.scrape_partial_async(
+                    urls=__urls, department=department
+                )
+                professors = await self.professor_embedder.embed_all_async(
+                    items=professors, interval=interval
+                )
+
+                professor_models = [self.dto2orm(n) for n in professors]
+                professor_models = [n for n in professor_models if n]
+                professor_models = self.professor_repo.create_all(
+                    professor_models
+                )
+                models += professor_models
+
+                pbar.update(interval)
+
+                await asyncio.sleep(delay)
+        except TimeoutError as e:
+            affected = self.professor_repo.delete_by_department(department)
+            logger.exception(
+                f"[{department}] 크롤링에 실패하여 이전 데이터를 초기화 했습니다. ({affected} row deleted)"
+            )
+            raise e
+
+        return models
