@@ -2,7 +2,7 @@ from typing import List
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from db.common import Base
-
+from buildings import BuildingModel
 
 class UniversityModel(Base):
     """단과대학 테이블"""
@@ -13,6 +13,7 @@ class UniversityModel(Base):
     name = mapped_column(String, nullable=False)
     departments: Mapped[List["DepartmentModel"]
                         ] = relationship(back_populates="university")
+    buildings = relationship("buildingsModel", back_populates="university")
 
 
 class DepartmentModel(Base):
@@ -30,6 +31,7 @@ class DepartmentModel(Base):
     majors = relationship("MajorModel", back_populates="department")
     professors = relationship("ProfessorModel", back_populates="department")
     notices = relationship("NoticeModel", back_populates="department")
+    buildings = relationship("buildingsModel", back_populates="department")
 
 
 class MajorModel(Base):
@@ -43,3 +45,4 @@ class MajorModel(Base):
 
     department = relationship("DepartmentModel", back_populates="majors")
     professors = relationship("ProfessorModel", back_populates="major")
+    buildings = relationship("buildingsModel", back_populates="major")
