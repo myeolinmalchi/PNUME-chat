@@ -1,42 +1,40 @@
+from itertools import cycle
 from typing import List
 
 from services.base import BaseEmbedder
-from services.professor.dto import ProfessorDTO
-import asyncio
+from services.professor import ProfessorDTO
 
 
 class ProfessorEmbedder(BaseEmbedder[ProfessorDTO]):
 
     async def _embed_all_async(self, items, interval, session):
 
-        async def embed_partial_async(item):
-            from itertools import islice
+        async def embed_partial_async(_professors: List[ProfessorDTO]):
+            _infos = [professor["info"] for professor in _professors]
+            _details = [info["detail"] for info in _infos if "detail" in info]
 
-            inputs: List[str] = []
-            lens: List[int] = []
-
-            append = lambda acc, lens, xs: (acc + xs, lens + [len(xs)])
-            for k in ["fields", "educations", "careers"]:
-                if k in item["additional_info"]:
-                    inputs, lens = append(
-                        inputs, lens,
-                        [f["name"] for f in item["additional_info"][k]]
-                    )
+            details, indicies = [], []
+            for idx, p in enumerate(_professors):
+                _info = p["info"]
+                if "detail" in _info:
+                    details.append(_info["detail"])
+                    indicies.append(idx)
 
             embeddings = await self._embed_async(
-                texts=inputs, session=session, chunking=False
+                texts=_details, session=session, chunking=True
             )
 
-            iterator = iter(embeddings)
-            embeddings = [list(islice(iterator, length)) for length in lens]
+            assert isinstance(embeddings, list)
+            _embeddings = cycle(embeddings)
 
-            for e, k in zip(embeddings, ["fields", "educations", "careers"]):
-                if k in item["additional_info"]:
-                    item["additional_info"][k] = [{
-                        **p, "embeddings": e
-                    } for p, e in zip(item["additional_info"][k], e)]
-
-            return item
+            return [
+                ProfessorDTO(
+                    **professor,
+                    **({
+                        "embeddings": next(_embeddings)
+                    } if idx in indicies else {})
+                ) for idx, professor in enumerate(_professors)
+            ]
 
         def parts(_list, n):
             for idx in range(0, len(_list), n):
@@ -46,8 +44,6 @@ class ProfessorEmbedder(BaseEmbedder[ProfessorDTO]):
 
         professors: List[ProfessorDTO] = []
         for _professors in parted_professors:
-            professors += await asyncio.gather(
-                *[embed_partial_async(p) for p in _professors]
-            )
+            professors += await embed_partial_async(_professors)
 
         return professors
