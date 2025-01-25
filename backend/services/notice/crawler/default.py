@@ -4,13 +4,10 @@ from aiohttp import ClientError
 from markdownify import markdownify as md
 
 from bs4 import BeautifulSoup
-from services.notice.crawler import NoticeCrawlerBase
+from services.notice.crawler.base import NoticeCrawlerBase
 from urllib3.util import parse_url
-import json
 
 from services.notice.dto import NoticeDTO
-
-URLs = {}
 
 SELECTORs = {
     "list": "div._articleTable > form:nth-child(2) table > tbody > tr:not(.headline)",
@@ -24,9 +21,6 @@ SELECTORs = {
         "attachments": "div.artclItem > dl > dd > ul > li"
     }
 }
-
-with open('urls/notices.json') as f:
-    URLs = json.load(f)
 
 
 class NoticeCrawler(NoticeCrawlerBase):
