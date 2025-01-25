@@ -25,14 +25,14 @@ class NoticeRepository(BaseRepository[NoticeModel]):
 
         return last_notice
     def delete_by_department(self, department: str):
-        department = self.session.query(DepartmentModel).filter(
+        department_model = self.session.query(DepartmentModel).filter(
             DepartmentModel.name == department
         ).one_or_none()
-        if department is None:
+        if department_model is None:
             raise ValueError(f"존재하지 않는 학과입니다: {department}")
 
         affected = self.session.query(NoticeModel).filter(
-            NoticeModel.department_id == department.id
+            NoticeModel.department_id == department_model.id
         ).delete()
 
         return affected
