@@ -1,6 +1,6 @@
 from typing import List
 from pgvector.sqlalchemy import SPARSEVEC, Vector
-from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from db.common import N_DIM, V_DIM, Base
 from sqlalchemy import Enum as SQLEnum
@@ -11,7 +11,7 @@ class ProfessorModel(Base):
     __tablename__ = "professors"
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    seq = mapped_column(Integer, nullable=False)
+    url = mapped_column(String, nullable=False, unique=True)
 
     department_id = mapped_column(ForeignKey("departments.id"), nullable=False)
     major_id = mapped_column(ForeignKey("majors.id"), nullable=True)
@@ -31,10 +31,6 @@ class ProfessorModel(Base):
     detail: Mapped[str] = mapped_column(String, nullable=True)
     detail_chunks: Mapped[List["ProfessorDetailChunkModel"]
                           ] = relationship(back_populates="professor")
-
-    __table_args__ = (
-        UniqueConstraint('seq', 'department_id', name='uq_department_seq'),
-    )
 
 
 class ProfessorDetailChunkModel(Base):
