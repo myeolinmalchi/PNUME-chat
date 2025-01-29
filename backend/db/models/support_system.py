@@ -4,10 +4,11 @@ from db.common import Base
 from db.common import N_DIM, V_DIM
 from pgvector.sqlalchemy import Vector, SPARSEVEC
 
+
 class SupportModel(Base):
     """부산대 학지시"""
-    
-    __tablaname__ = "supports"
+
+    __tablename__ = "supports"
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     category = mapped_column(String, nullable=False)
@@ -24,10 +25,11 @@ class SupportModel(Base):
         "SupportAttachmentModel", back_populates="support"
     )
 
+
 class SupportChunkModel(Base):
     """부산대 학지시 세부사항 chunk"""
-    
-    __talblename__ = "support_content_chunks"
+
+    __tablename__ = "support_content_chunks"
 
     chunk_id = mapped_column(Integer, primary_key=True, autoincrement=True)
     support_id = mapped_column(ForeignKey("supports.id", ondelete="CASCADE"))
