@@ -126,3 +126,26 @@ class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
             raise e
 
         return models
+
+    class SearchOptions(TypedDict):
+        count: NotRequired[int]
+        lexical_ratio: NotRequired[float]
+
+    def search_professors(self, query: str, **opts: Unpack[SearchOptions]):
+        from time import time
+        st = time()
+        embed_result = self.professor_embedder._embed_query(
+            query, chunking=False
+        )
+        logger.info(f"embed query: {time() - st:.4f}")
+
+        st = time()
+        search_results = self.professor_repo.search_professors_hybrid(
+            dense_vector=embed_result["dense"],
+            sparse_vector=embed_result["sparse"],
+            lexical_ratio=opts.get("lexical_ratio", 0.5),
+            k=opts.get("count", 5),
+        )
+        logger.info(f"hybrid search: {time() - st:.4f}")
+
+        return search_results
