@@ -26,10 +26,10 @@ class DepartmentModel(Base):
     majors = relationship("MajorModel", back_populates="department")
     professors = relationship("ProfessorModel", back_populates="department")
     notices = relationship("NoticeModel", back_populates="department")
-    buildings = relationship("BuildingsModel", back_populates="department")
+    buildings = relationship("BuildingModel", back_populates="department")
 
     subjects = relationship("SubjectModel", back_populates="department")
-    courses = relationship("CourseModel", back_populates="department")
+    #courses = relationship("CourseModel", back_populates="department")
 
 
 class MajorModel(Base):
@@ -43,7 +43,6 @@ class MajorModel(Base):
 
     department = relationship("DepartmentModel", back_populates="majors")
     professors = relationship("ProfessorModel", back_populates="major")
-    buildings = relationship("BuildingsModel", back_populates="major")
 
 
 class BuildingModel(Base):
@@ -61,7 +60,6 @@ class BuildingModel(Base):
     university_id = mapped_column(ForeignKey("universities.id"))
     department_id = mapped_column(ForeignKey("departments.id"))
 
-    universities = relationship("UniversityModel", back_populates="buildings")
-    departments = relationship("DepartmentModel", back_populates="buildings")
+    department = relationship("DepartmentModel", back_populates="buildings")
 
     timetables = relationship("CourseTimeTableModel", back_populates="building")
