@@ -1,8 +1,5 @@
-##부산대 학지시 ORM
-
-from typing import List
 from sqlalchemy import Integer, String, ForeignKey
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.orm import relationship, mapped_column
 from db.common import Base
 from db.common import N_DIM, V_DIM
 from pgvector.sqlalchemy import Vector, SPARSEVEC
@@ -21,13 +18,10 @@ class SupportModel(Base):
 
     title_vector = mapped_column(Vector(dim=N_DIM), nullable=True)
     title_sparse_vector = mapped_column(SPARSEVEC(dim=V_DIM), nullable=True)
-    
 
-    content_chunks: Mapped[List["SupportChunkModel"]] = relationship(
-        back_populates="support"
-    )
-    attachments: Mapped[List["SupportAttachmentModel"]] = relationship(
-        back_populates="support"
+    content_chunks = relationship("SupportChunkModel", back_populates="support")
+    attachments = relationship(
+        "SupportAttachmentModel", back_populates="support"
     )
 
 class SupportChunkModel(Base):
@@ -41,10 +35,9 @@ class SupportChunkModel(Base):
     chunk_vector = mapped_column(Vector(dim=N_DIM), nullable=True)
     chunk_sparse_vector = mapped_column(SPARSEVEC(dim=V_DIM), nullable=True)
 
-    support: Mapped["SupportModel"] = relationship(
-        back_populates="content_chunks"
-    )
-    
+    support = relationship("SupportModel", back_populates="content_chunks")
+
+
 class SupportAttachmentModel(Base):
     """학지시 각 항목 첨부파일 테이블"""
 
@@ -55,6 +48,4 @@ class SupportAttachmentModel(Base):
     name = mapped_column(String, nullable=False)
     url = mapped_column(String, nullable=False)
 
-    support: Mapped["SupportModel"] = relationship(
-        back_populates="attachments"
-    )
+    support = relationship("SupportModel", back_populates="attachments")
