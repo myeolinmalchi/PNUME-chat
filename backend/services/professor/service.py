@@ -1,3 +1,4 @@
+from typing import NotRequired, TypedDict, Unpack
 from pgvector.sqlalchemy import SparseVector
 from config.config import get_professor_urls
 from db.common import V_DIM
@@ -36,9 +37,8 @@ class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
                     detail=e["chunk"],
                     dense_vector=e["dense"],
                     sparse_vector=SparseVector(e["sparse"], V_DIM)
-                )
+                ) for e in embeddings
             ]
-            for e in embeddings
         } if embeddings else {}
 
     @transaction()
