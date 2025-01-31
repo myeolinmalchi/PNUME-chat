@@ -99,7 +99,7 @@ class BuildingModel(Base):
 
     main_department = mapped_column(String, nullable=False)
 
-    university_id = mapped_column(ForeignKey("universities.id"))
+    #university_id = mapped_column(ForeignKey("universities.id"))
     department_id = mapped_column(ForeignKey("departments.id"))
 
     department = relationship("DepartmentModel", secondary=association_table, back_populates="buildings")
