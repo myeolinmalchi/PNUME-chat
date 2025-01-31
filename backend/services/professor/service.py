@@ -20,8 +20,7 @@ logger = logging.getLogger(__name__)
 class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
 
     def __init__(
-        self, professor_repo: ProfessorRepository,
-        professor_embedder: ProfessorEmbedder,
+        self, professor_repo: ProfessorRepository, professor_embedder: ProfessorEmbedder,
         professor_crawler: ProfessorCrawlerBase, univ_repo: UniversityRepository
     ):
         self.professor_repo = professor_repo
@@ -34,9 +33,7 @@ class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
         return {
             "detail_chunks": [
                 ProfessorDetailChunkModel(
-                    detail=e["chunk"],
-                    dense_vector=e["dense"],
-                    sparse_vector=SparseVector(e["sparse"], V_DIM)
+                    detail=e["chunk"], dense_vector=e["dense"], sparse_vector=SparseVector(e["sparse"], V_DIM)
                 ) for e in embeddings
             ]
         } if embeddings else {}
@@ -50,9 +47,7 @@ class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
         department_model = self.univ_repo.find_department_by_name(department)
 
         if "major" in info:
-            major_model = self.univ_repo.find_major(
-                department=department, name=info["major"]
-            )
+            major_model = self.univ_repo.find_major(department=department, name=info["major"])
             _professor["major_id"] = major_model.id
             del _professor["major"]
 
@@ -90,29 +85,20 @@ class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
 
             _urls = list(set(_urls))
 
-            pbar = tqdm(
-                range(0, len(_urls), interval),
-                total=len(_urls),
-                desc=f"[{department}]"
-            )
+            pbar = tqdm(range(0, len(_urls), interval), total=len(_urls), desc=f"[{department}]")
 
             for st in pbar:
                 ed = min(st + interval, len(_urls))
                 pbar.set_postfix({'range': f"{st + 1} ~ {ed}"})
 
                 __urls = _urls[st:ed]
-                professors = await self.professor_crawler.scrape_partial_async(
-                    urls=__urls, department=department
-                )
-                professors = await self.professor_embedder.embed_all_async(
-                    items=professors, interval=interval
-                )
+                dtos = [ProfessorDTO(url=url, info={"department": department}) for url in __urls]
+                professors = await self.professor_crawler.scrape_detail_async(dtos)
+                professors = await self.professor_embedder.embed_all_async(items=professors, interval=interval)
 
                 professor_models = [self.dto2orm(n) for n in professors]
                 professor_models = [n for n in professor_models if n]
-                professor_models = self.professor_repo.create_all(
-                    professor_models
-                )
+                professor_models = self.professor_repo.create_all(professor_models)
                 models += professor_models
 
                 pbar.update(interval)
@@ -120,9 +106,7 @@ class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
                 await asyncio.sleep(delay)
         except TimeoutError as e:
             affected = self.professor_repo.delete_by_department(department)
-            logger.exception(
-                f"[{department}] 크롤링에 실패하여 이전 데이터를 초기화 했습니다. ({affected} row deleted)"
-            )
+            logger.exception(f"[{department}] 크롤링에 실패하여 이전 데이터를 초기화 했습니다. ({affected} row deleted)")
             raise e
 
         return models
@@ -134,9 +118,7 @@ class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
     def search_professors(self, query: str, **opts: Unpack[SearchOptions]):
         from time import time
         st = time()
-        embed_result = self.professor_embedder._embed_query(
-            query, chunking=False
-        )
+        embed_result = self.professor_embedder._embed_query(query, chunking=False)
         logger.info(f"embed query: {time() - st:.4f}")
 
         st = time()
@@ -144,7 +126,7 @@ class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
             dense_vector=embed_result["dense"],
             sparse_vector=embed_result["sparse"],
             lexical_ratio=opts.get("lexical_ratio", 0.5),
-            k=opts.get("count", 5),
+            k=opts.get("count", 10),
         )
         logger.info(f"hybrid search: {time() - st:.4f}")
 
