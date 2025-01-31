@@ -1,7 +1,28 @@
 from sqlalchemy import Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, mapped_column
 from sqlalchemy import Table, Column
-from db.common import Base
+from db.common import Base, SQLEnum
+from enum import Enum
+
+class StructEnum(Enum):
+    """구분(건물 구조)"""
+    steel = "ST"
+    light_steel = "경량ST"
+    steel_reinforced_concrete = "SRC"
+    reinforced_concrete = "RC"
+    masonry = "석조"
+    brick = "벽돌조"
+
+class PlaceEnum(Enum):
+    """구분(구내/외)"""
+    onsite = "구내"
+    offsite = "구외"
+
+class SafetyEnum(Enum):
+    """안전등급"""
+    A = "A"
+    B = "B"
+    C = "C"
 
 association_table = Table(
     "assiciation",
@@ -61,8 +82,21 @@ class BuildingModel(Base):
     name = mapped_column(String, nullable=False, unique=True)
     building_num = mapped_column(Integer, nullable=False, unique=True)
 
+    place = mapped_column(SQLEnum(PlaceEnum), nullable=False)
+    structure = mapped_column(SQLEnum(StructEnum), nullable=False)    
+    floor_under = mapped_column(Integer, nullable=False)
+    floor_above = mapped_column(Integer, nullable=False)
+    completion = mapped_column(String, nullable=False)
+    building_area = mapped_column(Integer, nullable=False)
+    total_floor_area = mapped_column(Integer, nullable=False)
+    year_elapsed = mapped_column(Integer, nullable=False)
+    safety = mapped_column(SQLEnum(SafetyEnum), nullable=False)
+    
+
     longitude = mapped_column(Float, nullable=False)
     latitude = mapped_column(Float, nullable=False)
+
+    main_department = mapped_column(String, nullable=False)
 
     university_id = mapped_column(ForeignKey("universities.id"))
     department_id = mapped_column(ForeignKey("departments.id"))
