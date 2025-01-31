@@ -12,18 +12,17 @@ class SupportModel(Base):
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     category = mapped_column(String, nullable=False)
-    sub_category = mapped_column(String, nullable=False)
-    title = mapped_column(String, nullable=True)
-    url = mapped_column(String, nullable=False)
+    sub_category = mapped_column(String, nullable=True)
+
+    title = mapped_column(String, nullable=False)
+    url = mapped_column(String, nullable=False, unique=True)
     content = mapped_column(String, nullable=False)
 
     title_vector = mapped_column(Vector(dim=N_DIM), nullable=True)
     title_sparse_vector = mapped_column(SPARSEVEC(dim=V_DIM), nullable=True)
 
     content_chunks = relationship("SupportChunkModel", back_populates="support")
-    attachments = relationship(
-        "SupportAttachmentModel", back_populates="support"
-    )
+    attachments = relationship("SupportAttachmentModel", back_populates="support")
 
 
 class SupportChunkModel(Base):
