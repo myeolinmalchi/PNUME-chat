@@ -10,6 +10,19 @@ from db.repositories.base import BaseRepository
 
 class ProfessorRepository(BaseRepository[ProfessorModel]):
 
+    def create_all(self, objects):
+        professors = []
+        for professor in objects:
+            professor_model = self.session.query(ProfessorModel).filter(ProfessorModel.url == professor.url).first()
+
+            if not professor_model:
+                professors.append(professor)
+                continue
+
+        professors = super().create_all(professors)
+
+        return professors
+
     def delete_by_department(self, department: str):
         department = self.session.query(DepartmentModel).filter(
             DepartmentModel.name == department
