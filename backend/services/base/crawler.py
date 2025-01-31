@@ -1,11 +1,10 @@
 from abc import abstractmethod
 import asyncio
-from typing import Callable, Generic, List, Optional, TypeVar, overload
+from typing import Callable, Generic, List, Optional, TypeVar, TypedDict, overload
 import re
 
 from aiohttp import ClientSession
 import aiohttp
-from requests.sessions import HTTPAdapter
 
 from mixins.asyncio import retry_async, retry_sync
 from mixins.http_client import HTTPMetaclass
@@ -17,37 +16,29 @@ DTO = TypeVar("DTO")
 
 class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
 
-    async def scrape_all_async(
-        self,
-        interval: int,
-        delay: float = 0,
-        session: Optional[ClientSession] = None,
-        **kwargs
-    ) -> List[DTO]:
+    async def scrape_detail_async(self,
+                                  dtos: List[DTO],
+                                  session: Optional[ClientSession] = None,
+                                  **kwargs) -> List[DTO]:
         if session is None:
             raise ValueError("parameter 'session' cannot be None.")
 
-        return await self._scrape_all_async(
-            interval, delay, **kwargs, session=session
-        )
+        return await self._scrape_detail_async(dtos, session, **kwargs)
+
+    async def _scrape_detail_async(self, dtos: List[DTO], session: ClientSession, **kwargs) -> List[DTO]:
+        urls = [dto["url"] for dto in dtos]
+        soups = await self._scrape_async(urls, session=session)
+
+        loop = asyncio.get_running_loop()
+        tasks = [loop.run_in_executor(None, self._parse_detail, dto, soup) for soup, dto in zip(soups, dtos)]
+
+        dtos_ = await asyncio.gather(*tasks)
+        dtos_ = [dto for dto in dtos_ if dto]
+
+        return dtos_
 
     @abstractmethod
-    async def _scrape_all_async(
-        self, interval: int, delay: float, session: ClientSession, **kwargs
-    ) -> List[DTO]:
-        pass
-
-    async def scrape_partial_async(
-        self, session: Optional[ClientSession] = None, **kwargs
-    ) -> List[DTO]:
-        if session is None:
-            raise ValueError("parameter 'session' cannot be None.")
-
-        return await self._scrape_partial_async(**kwargs, session=session)
-
-    @abstractmethod
-    async def _scrape_partial_async(self, session: ClientSession,
-                                    **kwargs) -> List[DTO]:
+    def _parse_detail(self, dto: DTO, soup: BeautifulSoup) -> Optional[DTO]:
         pass
 
     @overload
