@@ -21,6 +21,9 @@ sqlalchemy = "^2.0.36"
 python-dotenv = "^1.0.1"
 alembic = "^1.14.0"
 html5lib = "^1.1"
+pandas = "^2.2.3"
+tqdm = "^4.67.1"
+openai = "^1.60.2"
 
 [tool.poetry.group.dev.dependencies]
 yapf = "^0.43.0"
