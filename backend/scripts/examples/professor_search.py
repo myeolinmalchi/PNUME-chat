@@ -20,12 +20,10 @@ async def run(lexical_ratio: float, query: str, departments: List[str]):
     professor_service = create_professor_service()
 
     try:
-        search_results = professor_service.search_professors(
-            query, lexical_ratio=lexical_ratio, count=10
-        )
+        search_results = professor_service.search_professors(query, lexical_ratio=lexical_ratio)
 
         for idx, (professor, score) in enumerate(search_results):
-            print(f"{idx + 1}. {professor.name} (score: {score:.4f})")
+            print(f"[{idx + 1}] {professor.name} (score: {score:.4f})")
 
     except Exception as e:
         logger.exception(e)
@@ -33,17 +31,9 @@ async def run(lexical_ratio: float, query: str, departments: List[str]):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-l", "--lexical-ratio", dest="lexical_ratio", default=0.5
-    )
+    parser.add_argument("-l", "--lexical-ratio", dest="lexical_ratio", default=0.5)
     parser.add_argument("-q", "--query", dest="query", required=True)
-    parser.add_argument(
-        "-dp",
-        "--departments",
-        dest="departments",
-        action="store",
-        default="ALL"
-    )
+    parser.add_argument("-dp", "--departments", dest="departments", action="store", default="ALL")
     args = parser.parse_args()
 
     lexical_ratio = float(args.lexical_ratio)
