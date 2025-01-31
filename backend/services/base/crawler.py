@@ -1,6 +1,6 @@
 from abc import abstractmethod
 import asyncio
-from typing import Callable, Generic, List, Optional, TypeVar, TypedDict, overload
+from typing import Callable, Generic, List, Optional, overload
 import re
 
 from aiohttp import ClientSession
@@ -9,9 +9,8 @@ import aiohttp
 from mixins.asyncio import retry_async, retry_sync
 from mixins.http_client import HTTPMetaclass
 from bs4 import BeautifulSoup
+from services.base.dto import DTO
 import requests
-
-DTO = TypeVar("DTO")
 
 
 class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
