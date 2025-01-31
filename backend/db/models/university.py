@@ -29,7 +29,6 @@ class DepartmentModel(Base):
     buildings = relationship("BuildingModel", back_populates="department")
 
     subjects = relationship("SubjectModel", back_populates="department")
-    #courses = relationship("CourseModel", back_populates="department")
 
 
 class MajorModel(Base):
@@ -57,9 +56,6 @@ class BuildingModel(Base):
     longitude = mapped_column(Float, nullable=False)
     latitude = mapped_column(Float, nullable=False)
 
-    university_id = mapped_column(ForeignKey("universities.id"))
     department_id = mapped_column(ForeignKey("departments.id"))
-
     department = relationship("DepartmentModel", back_populates="buildings")
-
     timetables = relationship("CourseTimeTableModel", back_populates="building")
