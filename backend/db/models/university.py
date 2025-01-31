@@ -1,7 +1,14 @@
 from sqlalchemy import Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy import Table, Column
 from db.common import Base
 
+association_table = Table(
+    "assiciation",
+    Base.metadata,
+    Column("department_id", ForeignKey("departments.id"), primary_key=True),
+    Column("building_id", ForeignKey("buildings.id"), primary_key=True)   
+)
 
 class UniversityModel(Base):
     """단과대학 테이블"""
@@ -26,7 +33,7 @@ class DepartmentModel(Base):
     majors = relationship("MajorModel", back_populates="department")
     professors = relationship("ProfessorModel", back_populates="department")
     notices = relationship("NoticeModel", back_populates="department")
-    buildings = relationship("BuildingModel", back_populates="department")
+    buildings = relationship("BuildingModel", secondary=association_table, back_populates="department")
 
     subjects = relationship("SubjectModel", back_populates="department")
     #courses = relationship("CourseModel", back_populates="department")
@@ -60,6 +67,6 @@ class BuildingModel(Base):
     university_id = mapped_column(ForeignKey("universities.id"))
     department_id = mapped_column(ForeignKey("departments.id"))
 
-    department = relationship("DepartmentModel", back_populates="buildings")
+    department = relationship("DepartmentModel", secondary=association_table, back_populates="buildings")
 
     timetables = relationship("CourseTimeTableModel", back_populates="building")
