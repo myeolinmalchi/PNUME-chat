@@ -42,29 +42,20 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         pass
 
     @overload
-    async def _scrape_async(
-        self,
-        url: str,
-        session: ClientSession,
-        retry_delay: float = 5.0
-    ) -> BeautifulSoup:
+    async def _scrape_async(self, url: str, session: ClientSession, retry_delay: float = 5.0) -> BeautifulSoup:
         ...
 
     @overload
-    async def _scrape_async(
-        self,
-        url: List[str],
-        session: ClientSession,
-        retry_delay: float = 5.0
-    ) -> List[BeautifulSoup]:
+    async def _scrape_async(self,
+                            url: List[str],
+                            session: ClientSession,
+                            retry_delay: float = 5.0) -> List[BeautifulSoup]:
         ...
 
-    async def _scrape_async(
-        self,
-        url: str | List[str],
-        session: ClientSession,
-        retry_delay: float = 5.0
-    ) -> BeautifulSoup | List[BeautifulSoup]:
+    async def _scrape_async(self,
+                            url: str | List[str],
+                            session: ClientSession,
+                            retry_delay: float = 5.0) -> BeautifulSoup | List[BeautifulSoup]:
 
         @retry_async(delay=retry_delay)
         async def scrape_coroutine(_url):
@@ -81,28 +72,15 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         return await asyncio.gather(*[scrape_coroutine(_url) for _url in url])
 
     @overload
-    def _scrape(
-        self,
-        url: str,
-        timeout: int = 600,
-        is_success=lambda _: True
-    ) -> BeautifulSoup:
+    def _scrape(self, url: str, timeout: int = 600, is_success=lambda _: True) -> BeautifulSoup:
         ...
 
     @overload
-    def _scrape(
-        self,
-        url: List[str],
-        timeout: int = 600,
-        is_success=lambda _: True
-    ) -> List[BeautifulSoup]:
+    def _scrape(self, url: List[str], timeout: int = 600, is_success=lambda _: True) -> List[BeautifulSoup]:
         ...
 
     def _scrape(
-        self,
-        url: str | List[str],
-        timeout: int = 600,
-        is_success: Callable[[BeautifulSoup], bool] = lambda _: True
+        self, url: str | List[str], timeout: int = 600, is_success: Callable[[BeautifulSoup], bool] = lambda _: True
     ):
 
         @retry_sync(is_success=is_success)
