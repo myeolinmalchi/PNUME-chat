@@ -294,7 +294,7 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         unique_details = [detail for index, detail in enumerate(details) if index in sorted(result)]
         return unique_details
 
-    async def craw4ai(self, url:str, n_urls:int=None,
+    async def custom_crawl4ai(self, url:str, n_urls:int=None,
                       chunk_token_threshold:int=3000, 
                       overlap_rate:float=0.1, 
                       max_tokens:int=1000, 
@@ -323,7 +323,7 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
 if __name__ == "__main__":
     base_crawler = BaseCrawler()
     url = "url"
-    details = asyncio.run(base_crawler.craw4ai(url, 10))
+    details = asyncio.run(base_crawler.custom_crawl4ai(url, 10))
     print(details)
 
 
