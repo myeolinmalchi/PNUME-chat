@@ -293,15 +293,27 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
                 result.append(min(indices))
         unique_details = [detail for index, detail in enumerate(details) if index in sorted(result)]
         return unique_details
-    
-    async def craw4ai(self, url:str, n_urls:int=None)->List[Dict]:
+
+    async def craw4ai(self, url:str, n_urls:int=None,
+                      chunk_token_threshold:int=3000, 
+                      overlap_rate:float=0.1, 
+                      max_tokens:int=1000, 
+                      end_point:Optional[str]=None,
+                      llm_model:Optional[str]="openai/gpt-4o-mini",
+                      api:Optional[str]=OPENAI_API_KEY)->List[Dict]:
         target_url = url
         found_links = self.extract_links_filter(target_url)
         if n_urls is None:
             urls = found_links
         else:
             urls = found_links[:n_urls]
-        results = await asyncio.gather(*[self.crawl_details(url) for url in urls if url], return_exceptions=True)
+        results = await asyncio.gather(*[self.crawl_details(url,
+                                                            chunk_token_threshold=chunk_token_threshold,
+                                                            overlap_rate=overlap_rate,
+                                                            max_tokens=max_tokens,
+                                                            end_point=end_point,
+                                                            llm_model=llm_model,
+                                                            api=api) for url in urls if url], return_exceptions=True)
         combined_details = self.combine_details(results)
         details = self.write_urls(urls, combined_details)
         filled_details = self.filter_empty_detail(details)
@@ -310,7 +322,7 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
     
 if __name__ == "__main__":
     base_crawler = BaseCrawler()
-    url = "https://pnumemslab.wixsite.com/mems"
+    url = "url"
     details = asyncio.run(base_crawler.craw4ai(url, 10))
     print(details)
 
