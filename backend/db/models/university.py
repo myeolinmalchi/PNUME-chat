@@ -86,7 +86,7 @@ class BuildingModel(Base):
 
     id = mapped_column(Integer, primary_key=True, autoincrement=True)
     name = mapped_column(String, nullable=False, unique=True)
-    building_num = mapped_column(Integer, nullable=False, unique=True)
+    building_num: Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
     place = mapped_column(SQLEnum(PlaceEnum), nullable=True)
     structure = mapped_column(SQLEnum(StructEnum), nullable=True)
