@@ -5,17 +5,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 import os
 from sqlalchemy.orm import declarative_base
 
 N_DIM, V_DIM = (1024, 250002)
+
 Base = declarative_base()
 
 session_context_var: ContextVar = ContextVar("db_session", default=None)
 
 _engine = None
 _Session = None
+
+from sqlalchemy import Enum
+
+_values_callable = lambda obj: [e.value for e in obj]
+SQLEnum = lambda SomeEnum: Enum(SomeEnum, values_callable=_values_callable)
 
 
 def get_engine() -> Engine:

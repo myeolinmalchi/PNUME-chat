@@ -1,5 +1,4 @@
-import asyncio
-from typing import List, Optional
+from typing import List
 
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
@@ -80,10 +79,7 @@ class NoticeMECrawler(NoticeCrawlerBase):
         path = URLs[url_key]["path"]
         db = URLs[url_key]["db"]
 
-        _urls = [
-            f"{DOMAIN}{path}?db={db}&seq={seq}&page_mode=view"
-            for seq in range(1, seq + 1)
-        ]
+        _urls = [f"{DOMAIN}{path}?db={db}&seq={seq}&page_mode=view" for seq in range(1, seq + 1)]
 
         return _urls
 
@@ -107,47 +103,11 @@ class NoticeMECrawler(NoticeCrawlerBase):
 
         raise Exception
 
-    async def _scrape_partial_async(self, session, **kwargs):
-        urls = kwargs.get('urls')
-        if not urls:
-            raise ValueError("parameter 'urls' must be contained")
-
-        url_key = kwargs.get('url_key')
-
-        if not url_key:
-            raise ValueError(f"parameter 'url_key' must be contained")
-        if url_key not in URLs:
-            raise ValueError(f"존재하지 않는 카테고리입니다.({url_key})")
-
-        soups = await self._scrape_async(urls, session=session)
-        loop = asyncio.get_running_loop()
-        tasks = [
-            loop.run_in_executor(None, self._parse_detail, soup)
-            for soup in soups
-        ]
-        notices = await asyncio.gather(*tasks)
-
-        for notice, url in zip(notices, urls):
-            if notice and "info" in notice:
-                notice["url"] = url
-                notice["info"]["category"] = url_key
-                notice["info"]["department"] = DEPARTMENT
-
-        notices = [notice for notice in notices if notice]
-
-        return notices
-
-    def _parse_detail(
-        self,
-        soup: BeautifulSoup,
-    ) -> Optional[NoticeDTO]:
+    def _parse_detail(self, dto, soup):
         for img in soup.select("img"):
             img.extract()
 
-        elements = {
-            key: soup.select_one(selector)
-            for key, selector in SELECTORs["detail"]["info"].items()
-        }
+        elements = {key: soup.select_one(selector) for key, selector in SELECTORs["detail"]["info"].items()}
 
         _info = {
             key: element.get_text(separator="", strip=True)
@@ -165,11 +125,13 @@ class NoticeMECrawler(NoticeCrawlerBase):
                 if not a or not a.has_attr("href"):
                     continue
 
-                name = self._preprocess_text(a.text, True)
-                path = self._preprocess_text(str(a["href"]), True),
+                name = self._preprocess_text(a.text)
+                path = self._preprocess_text(str(a["href"])),
                 _attachments.append({"name": name, "url": f"{DOMAIN}{path}"})
 
         _info["content"] = self._preprocess_text(md(_info["content"]))
-        _dto = {"info": _info, "attachments": _attachments}
+
+        _info = {**_info, **dto["info"]}
+        _dto = {**dto, "info": _info, "attachments": _attachments}
 
         return NoticeDTO(**_dto)

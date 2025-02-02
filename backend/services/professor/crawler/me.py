@@ -63,23 +63,14 @@ class ProfessorMECrawler(ProfessorCrawlerBase):
 
         soups = await self._scrape_async(_urls, session=session)
         loop = asyncio.get_running_loop()
-        tasks = [
-            loop.run_in_executor(None, self._parse_detail, seq, soup)
-            for seq, soup in zip(seqs, soups)
-        ]
+        tasks = [loop.run_in_executor(None, self._parse_detail, seq, soup) for seq, soup in zip(seqs, soups)]
         results = await asyncio.gather(*tasks)
         return results
 
     def _parse_detail(self, seq: int, soup: BeautifulSoup):
-        elements = {
-            key: soup.select_one(selector)
-            for key, selector in SELECTORs["detail"].items()
-        }
+        elements = {key: soup.select_one(selector) for key, selector in SELECTORs["detail"].items()}
 
-        basic_info = {
-            k: v.get_text(separator="", strip=True)
-            for k, v in elements.items() if v is not None
-        }
+        basic_info = {k: v.get_text(separator="", strip=True) for k, v in elements.items() if v is not None}
 
         basic_info["major"] = "기계공학부"
 
@@ -124,32 +115,25 @@ class ProfessorMECrawler(ProfessorCrawlerBase):
         for img in soup.select("img"):
             img.extract()
 
-        result = ProfessorDTO(
-            **{
-                "seq": seq,
-                "basic_info": basic_info,
-                "additional_info": additional_info,
-            }
-        )
+        result = ProfessorDTO(**{
+            "seq": seq,
+            "basic_info": basic_info,
+            "additional_info": additional_info,
+        })
 
         return result
 
-    async def _scrape_all_async(self, interval, delay, session,
-                                **kwargs) -> List[ProfessorDTO]:
+    async def _scrape_all_async(self, interval, delay, session, **kwargs) -> List[ProfessorDTO]:
         seqs = self.scrape_seqs()
         results: List[ProfessorDTO] = []
 
         from tqdm import tqdm
 
-        pbar = tqdm(
-            range(0, len(seqs), interval),
-            desc="Scraping Professors",
-            total=len(seqs)
-        )
+        pbar = tqdm(range(0, len(seqs), interval), desc="Scraping Professors", total=len(seqs))
         for st_idx in pbar:
             ed_idx = st_idx + interval
             _seqs = seqs[st_idx:ed_idx]
-            professors = await self.scrape_partial_async(session, seqs=_seqs)
+            professors = await self.scrape_detail_async(session, seqs=_seqs)
             results += professors
 
             pbar.update(interval)
