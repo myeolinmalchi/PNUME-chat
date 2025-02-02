@@ -1,6 +1,6 @@
-from sqlalchemy import Float, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship, mapped_column
-from sqlalchemy import Table, Column
+from typing import List
+from sqlalchemy import Column, Float, ForeignKey, Integer, String, Table
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 from db.common import Base, SQLEnum
 from enum import Enum
 
@@ -28,9 +28,10 @@ class SafetyEnum(Enum):
     C = "C"
 
 
-association_table = Table(
-    "assiciation", Base.metadata, Column("department_id", ForeignKey("departments.id"), primary_key=True),
-    Column("building_id", ForeignKey("buildings.id"), primary_key=True)
+department_building_association = Table(
+    "department_building_association", Base.metadata,
+    Column("department_id", Integer, ForeignKey("departments.id"), primary_key=True),
+    Column("building_num", Integer, ForeignKey("buildings.id"), primary_key=True)
 )
 
 
@@ -57,9 +58,12 @@ class DepartmentModel(Base):
     majors = relationship("MajorModel", back_populates="department")
     professors = relationship("ProfessorModel", back_populates="department")
     notices = relationship("NoticeModel", back_populates="department")
-    buildings = relationship("BuildingModel", secondary=association_table, back_populates="department")
 
     subjects = relationship("SubjectModel", back_populates="department")
+
+    buildings: Mapped[List["BuildingModel"]] = relationship(
+        secondary=department_building_association, back_populates="departments"
+    )
 
 
 class MajorModel(Base):
@@ -100,8 +104,9 @@ class BuildingModel(Base):
     main_department = mapped_column(String, nullable=False)
 
     #university_id = mapped_column(ForeignKey("universities.id"))
-    department_id = mapped_column(ForeignKey("departments.id"))
 
-    department = relationship("DepartmentModel", secondary=association_table, back_populates="buildings")
 
     timetables = relationship("CourseTimeTableModel", back_populates="building")
+    departments: Mapped[List[DepartmentModel]] = relationship(
+        secondary=department_building_association, back_populates="buildings"
+    )
