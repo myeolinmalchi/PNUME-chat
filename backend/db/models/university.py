@@ -88,23 +88,18 @@ class BuildingModel(Base):
     name = mapped_column(String, nullable=False, unique=True)
     building_num = mapped_column(Integer, nullable=False, unique=True)
 
-    place = mapped_column(SQLEnum(PlaceEnum), nullable=False)
-    structure = mapped_column(SQLEnum(StructEnum), nullable=False)
-    floor_under = mapped_column(Integer, nullable=False)
-    floor_above = mapped_column(Integer, nullable=False)
-    completion = mapped_column(String, nullable=False)
-    building_area = mapped_column(Integer, nullable=False)
-    total_floor_area = mapped_column(Integer, nullable=False)
-    year_elapsed = mapped_column(Integer, nullable=False)
-    safety = mapped_column(SQLEnum(SafetyEnum), nullable=False)
+    place = mapped_column(SQLEnum(PlaceEnum), nullable=True)
+    structure = mapped_column(SQLEnum(StructEnum), nullable=True)
+    floor_under = mapped_column(Integer, nullable=True)
+    floor_above = mapped_column(Integer, nullable=True)
+    completion = mapped_column(String, nullable=True)
+    building_area = mapped_column(Integer, nullable=True)
+    total_floor_area = mapped_column(Integer, nullable=True)
+    year_elapsed = mapped_column(Integer, nullable=True)
+    safety = mapped_column(SQLEnum(SafetyEnum), nullable=True)
 
-    longitude = mapped_column(Float, nullable=False)
-    latitude = mapped_column(Float, nullable=False)
-
-    main_department = mapped_column(String, nullable=False)
-
-    #university_id = mapped_column(ForeignKey("universities.id"))
-
+    longitude = mapped_column(Float, nullable=True)
+    latitude = mapped_column(Float, nullable=True)
 
     timetables = relationship("CourseTimeTableModel", back_populates="building")
     departments: Mapped[List[DepartmentModel]] = relationship(
