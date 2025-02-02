@@ -1,14 +1,34 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, NotRequired, Optional, TypedDict, Unpack
 
 from pgvector.sqlalchemy import SparseVector
-from sqlalchemy import func
-from db.models import NoticeModel, NoticeChunkModel
+from sqlalchemy import func, and_
+from db.models import NoticeModel, NoticeChunkModel, DepartmentModel
 from db.common import V_DIM
-from db.models.universities import DepartmentModel
 from .base import BaseRepository
 
 
+class NoticeSearchFilter(TypedDict):
+    year: NotRequired[int]
+    departments: NotRequired[List[str]]
+
+
 class NoticeRepository(BaseRepository[NoticeModel]):
+
+    def search_filter(self, **kwargs: Unpack[NoticeSearchFilter]):
+        filters = []
+        if "year" in kwargs:
+            year = kwargs["year"]
+            filters.append(NoticeModel.date >= f"{year}-01-01 00:00:00")
+            filters.append(NoticeModel.date < f"{year + 1}-01-01 00:00:00")
+        if "departments" in kwargs:
+            departments = kwargs["departments"]
+            dp = self.session.query(DepartmentModel).filter(
+                DepartmentModel.name.in_(departments)
+            ).all()
+            dp_ids = list(map(lambda d: d.id, dp))
+            filters.append(NoticeModel.department_id.in_(dp_ids))
+
+        return and_(*filters)
 
     def find_last_notice(self, department: str, category: str):
         department_model = self.session.query(DepartmentModel).where(
@@ -98,7 +118,12 @@ class NoticeRepository(BaseRepository[NoticeModel]):
         lexical_ratio: float = 0.5,
         rrf_k: int = 60,
         k: int = 5,
+        **kwargs
     ):
+
+        filter = self.search_filter(**kwargs)
+        #query = query.filter(filter).limit(k)
+
         score_dense_content = 1 - NoticeChunkModel.chunk_vector.cosine_distance(
             dense_vector
         )
@@ -118,7 +143,9 @@ class NoticeRepository(BaseRepository[NoticeModel]):
                                        ).label("rank_content"),
             ).join(
                 NoticeChunkModel, NoticeModel.id == NoticeChunkModel.notice_id
-            ).group_by(NoticeModel.id).order_by(score_content.desc()).subquery()
+            ).group_by(NoticeModel.id
+                       ).filter(filter).order_by(score_content.desc()
+                                                 ).subquery()
         )
 
         score_dense_title = 1 - NoticeModel.title_vector.cosine_distance(
@@ -137,7 +164,7 @@ class NoticeRepository(BaseRepository[NoticeModel]):
             NoticeModel.id,
             func.row_number().over(order_by=score_title.desc()
                                    ).label("rank_title"),
-        ).subquery()
+        ).filter(filter).subquery()
 
         rrf_score = (
             1 / (rrf_k + rank_content.c.rank_content) + 1 /

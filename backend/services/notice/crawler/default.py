@@ -51,8 +51,7 @@ class NoticeCrawler(NoticeCrawlerBase):
         last_url = kwargs.get("last_url")
 
         if last_url:
-            compare_url = lambda url: len(url
-                                          ) == len(last_url) and url > last_url
+            compare_url = lambda url: len(url) == len(last_url) and url > last_url
             filtered_urls = [url for url in urls if compare_url(url)]
 
             if len(filtered_urls) < len(urls):
@@ -69,9 +68,7 @@ class NoticeCrawler(NoticeCrawlerBase):
             _urls = [f"{_url.scheme}://{_url.netloc}{path}" for path in paths]
 
             if last_url:
-                compare_url = lambda url: len(url) == len(
-                    last_url
-                ) and url > last_url
+                compare_url = lambda url: len(url) == len(last_url) and url > last_url
                 filtered_urls = [url for url in urls if compare_url(url)]
 
                 if len(filtered_urls) < len(urls):
@@ -115,36 +112,7 @@ class NoticeCrawler(NoticeCrawlerBase):
 
         return paths
 
-    async def _scrape_partial_async(self, session, **kwargs):
-        category = kwargs.get("category")
-        department = kwargs.get("department")
-        urls = kwargs.get("urls")
-
-        if not urls or not category or not department:
-            raise ValueError
-
-        soups = await self._scrape_async(urls, session=session)
-        loop = asyncio.get_running_loop()
-        tasks = [
-            loop.run_in_executor(None, self._parse_detail, soup)
-            for soup in soups
-        ]
-
-        notices = await asyncio.gather(*tasks)
-
-        for notice, url in zip(notices, urls):
-            if notice and "info" in notice:
-                notice["url"] = url
-                notice["info"]["category"] = category
-                notice["info"]["department"] = department
-
-        notices = [notice for notice in notices if notice]
-
-        return notices
-
-    def _parse_detail(self, soup: BeautifulSoup) -> Optional[NoticeDTO]:
-        """공지 상세 내용 파싱"""
-
+    def _parse_detail(self, dto, soup):
         for img in soup.select("img"):
             img.extract()
 
@@ -155,7 +123,7 @@ class NoticeCrawler(NoticeCrawlerBase):
                 if element is None:
                     return None
 
-                text = element.get_text(separator="", strip=True)
+                text = element.get_text(separator=" ", strip=True)
                 if key == "content":
                     text = self._preprocess_text(md(text))
                 _info[key] = text
@@ -168,8 +136,8 @@ class NoticeCrawler(NoticeCrawlerBase):
                 if not dt or not dd:
                     continue
 
-                category = dt.get_text(separator="", strip=True)
-                content = dd.get_text(separator="", strip=True)
+                category = dt.get_text(separator=" ", strip=True)
+                content = dd.get_text(separator=" ", strip=True)
 
                 if category in ["작성일", "date"]:
                     _info["date"] = content
@@ -186,10 +154,11 @@ class NoticeCrawler(NoticeCrawlerBase):
                 continue
 
             _attachments.append({
-                "name": self._preprocess_text(anchor.text, True),
-                "url": self._preprocess_text(str(anchor["href"]), True),
+                "name": self._preprocess_text(anchor.text),
+                "url": self._preprocess_text(str(anchor["href"])),
             })
 
-        _dto = {"info": _info, "attachments": _attachments}
+        _info = {**_info, **dto["info"]}
+        _dto = {**dto, "info": _info, "attachments": _attachments}
 
         return NoticeDTO(**_dto)

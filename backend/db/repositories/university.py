@@ -1,4 +1,4 @@
-from db.models.universities import DepartmentModel, MajorModel, UniversityModel
+from db.models import DepartmentModel, MajorModel, UniversityModel
 from db.repositories.base import BaseRepository
 
 
