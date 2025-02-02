@@ -29,6 +29,9 @@ class NoticeModel(Base):
     content_chunks: Mapped[List["NoticeChunkModel"]
                            ] = relationship(back_populates="notice")
 
+    semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id"), nullable=True)
+    semester: Mapped[SemesterModel] = relationship(back_populates="notices")
+
 
 class NoticeChunkModel(Base):
     __tablename__ = "notice_content_chunks"
