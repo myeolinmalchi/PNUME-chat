@@ -5,12 +5,18 @@ from enum import Enum
 
 
 class SemesterTypeEnum(Enum):
-    """학기 구분 ENUM"""
+    """학기 구분 ENUM
+
+    "여름 계절학기", "겨울 계절학기", "미분류" -> DB에는 있지만 사용하지 않음.
+    """
     spring_semester = "1학기"
     fall_semester = "2학기"
-    summer_session = "여름 계절학기"
-    winter_session = "겨울 계절학기"
-    unassigned = "미분류"
+    summer_vacation = "여름방학"
+    winter_vacation = "겨울방학"
+
+    #summer_session = "여름 계절학기"
+    #winter_session = "겨울 계절학기"
+    #unassigned = "미분류"
 
 
 class SemesterModel(Base):
