@@ -3,7 +3,7 @@ from fastapi import FastAPI
 ##CORS
 from starlette.middleware.cors import CORSMiddleware
 
-##ORM(sqlalchemy)
+##ORM(sqlalchemy) -> 이게 필요 있을까? 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 #from sqlalchemy.ext.declarative import declarative_base
@@ -21,11 +21,10 @@ from aiohttp import ClientSession
 ##for import embed module
 import os, sys
 
-##backend dir자체를 경로에 추가
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-##embedder가져옴.
-from services.base import embedder
+from app.service.dto import QuestionDTO, QuestionEmbeddingsDTO
+from app.service.embedder import 
 
+from openai import openAI
 
 
 app = FastAPI()
@@ -89,9 +88,7 @@ async def question(request: Request):
     previousContents: List = request.previousQuestionAnswerPairs ##이전 질의응답 list
     question: str = request.questionContent  ##이번에 들어온 질문 
 
-    retreival = embedder.EmbedResult()
-    ##DTO - DayaTypeObject
-    embedder.DTO = question
+    
     
     ##1. 유사도 검색 (retreival 변수로 받기)
     ##이때 await사용 
