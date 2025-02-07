@@ -21,11 +21,19 @@ from aiohttp import ClientSession
 ##for import embed module
 import os, sys
 
-from app.service.dto import QuestionDTO, QuestionEmbeddingsDTO
-from app.service.embedder import 
+from service.dto import QuestionDTO, QuestionEmbeddingsDTO
+from service.embedder import QuestionEmbedder
+from service.hybrid_search import search_question_hybrid
 
-from openai import openAI
+from openai import OpenAI
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#from scripts.examples import function_calling
+from services.base.embedder import EmbedResult
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -74,20 +82,31 @@ class Response(BaseModel):
     answerContent: str
     
 
- ##openAI / gpt-4o-mini
+##openAI / gpt-4o-mini
  
-
-
-
 
 
 ##api 구현
 ##fastapi는 pydantic model로 정의된 parameter를 request body에서 찾는다. 
 @app.post("/question", response_model=Response)
 async def question(request: Request):
-    previousContents: List = request.previousQuestionAnswerPairs ##이전 질의응답 list
-    question: str = request.questionContent  ##이번에 들어온 질문 
 
+    ## 들어온 질문 parsing
+    previousContents: List = request.previousQuestionAnswerPairs ##이전 질의응답 list
+    question: QuestionDTO = QuestionDTO(question=request.questionContent) ##이번에 들어온 질문 
+    
+    ## embedding
+    Embedder = QuestionEmbedder()
+    embed_result:EmbedResult = await Embedder._embed_async(texts=question)
+    question["embeddings"]["quesiton_dense"] = embed_result["dense"]
+    question["embeddings"]["question_dense"] = embed_result["sparse"]
+    
+    ## searching 
+    # function calling예제 보면 유사도 검색은 이미 구현되어 있고 그걸 tool로 전달해서 질문 답변하는 방식이다.
+
+    
+
+    ## Create Answer with function calling
     
     
     ##1. 유사도 검색 (retreival 변수로 받기)
@@ -116,7 +135,7 @@ async def question(request: Request):
     ##response data
 
 
-"""
+"""em
     response = {
         "questionContent": question,
         "answerContent": answer

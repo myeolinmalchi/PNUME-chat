@@ -1,23 +1,18 @@
-import os
-import asyncio
-from typing import TypedDict, List
+import os, sys
 
+import asyncio
+from typing import TypedDict, List, Dict
 from aiohttp import ClientSession
 
-from app.service.dto import QuestionDTO, QuestionEmbeddingsDTO
-
-from services.base import BaseEmbedder
+from dto import QuestionDTO, QuestionEmbeddingsDTO
 from dotenv import load_dotenv
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from services.base.embedder import BaseEmbedder, EmbedResult
 
 load_dotenv()
 
 EMBED_URL = os.environ.get("EMBED_URL")
 
-class QuestionEmbedResult(TypedDict):
-    dense: List[float]
-    sparse: List[int, float]
-
 class QuestionEmbedder(BaseEmbedder[QuestionDTO]):
-
-    async def _embed_dto_async(self, item: QuestionDTO, session: ClientSession) -> QuestionEmbeddingsDTO:
-        
+    pass 
