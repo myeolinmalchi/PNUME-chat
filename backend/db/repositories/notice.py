@@ -63,10 +63,6 @@ class NoticeRepository(BaseRepository[NoticeModel]):
 
         return and_(*filters)
 
-    def find_last_notice(self, department: str, category: str):
-        department_model = self.session.query(DepartmentModel).where(
-            DepartmentModel.name == department
-        ).limit(1).one_or_none()
 
         if not department_model:
             raise ValueError(f"({department}) 학과가 존재하지 않습니다.")
@@ -75,6 +71,19 @@ class NoticeRepository(BaseRepository[NoticeModel]):
             NoticeModel.department_id == department_model.id
             and NoticeModel.category == category
         ).order_by(NoticeModel.url.desc()).limit(1).one_or_none()
+    # TODO: 기계공학부 로직 분리 필요
+    def find_last_notice(self, **kwargs: Unpack[NoticeSearchFilterType]):
+        filter = self._get_filters(**kwargs)
+
+        notice_id = cast(func.split_part(NoticeModel.url, '/', 7),
+                         Integer).label("notice_id")
+
+        last_notice = self.session.query(NoticeModel,
+                                         notice_id).where(filter).order_by(
+                                             desc(notice_id)
+                                         ).first()
+
+        return last_notice[0] if last_notice else None
 
         return last_notice
     def delete_by_department(self, department: str):
