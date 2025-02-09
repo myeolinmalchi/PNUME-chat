@@ -63,9 +63,27 @@ class NoticeRepository(BaseRepository[NoticeModel]):
 
         return and_(*filters)
 
+    def update_semester(
+        self,
+        semester: SemesterModel,
+        batch: Optional[int] = None,
+        offset: Optional[int] = None
+    ):
+        st, ed = semester.st_date, semester.ed_date
+        date_filter = and_(NoticeModel.date >= st, NoticeModel.date <= ed)
+        query = self.session.query(NoticeModel).filter(date_filter)
+        if batch:
+            query.limit(batch)
+        if offset:
+            query.offset(offset)
 
-        if not department_model:
-            raise ValueError(f"({department}) 학과가 존재하지 않습니다.")
+        notices = query.all()
+
+        for notice in notices:
+            setattr(notice, "semester_id", semester.id)
+            self.session.flush()
+
+        return notices
 
         last_notice = self.session.query(NoticeModel).where(
             NoticeModel.department_id == department_model.id
