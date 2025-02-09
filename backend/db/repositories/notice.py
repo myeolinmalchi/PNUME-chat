@@ -85,10 +85,11 @@ class NoticeRepository(BaseRepository[NoticeModel]):
 
         return notices
 
-        last_notice = self.session.query(NoticeModel).where(
-            NoticeModel.department_id == department_model.id
-            and NoticeModel.category == category
-        ).order_by(NoticeModel.url.desc()).limit(1).one_or_none()
+    def search_total_records(self, **kwargs: Unpack[NoticeSearchFilterType]):
+        filter = self._get_filters(**kwargs)
+        count = self.session.query(NoticeModel).filter(filter).count()
+        return count
+
     # TODO: 기계공학부 로직 분리 필요
     def find_last_notice(self, **kwargs: Unpack[NoticeSearchFilterType]):
         filter = self._get_filters(**kwargs)
@@ -103,7 +104,6 @@ class NoticeRepository(BaseRepository[NoticeModel]):
 
         return last_notice[0] if last_notice else None
 
-        return last_notice
     def delete_by_department(self, department: str):
         department_model = self.session.query(DepartmentModel).filter(
             DepartmentModel.name == department
@@ -117,17 +117,12 @@ class NoticeRepository(BaseRepository[NoticeModel]):
 
         return affected
 
-    def create_all(self, objects):
-        self.session.add_all(objects)
-        self.session.flush()
-        return objects
-
     def search_notices_title_hybrid(
         self,
         dense_vector: List[float],
         sparse_vector: Dict[int, float],
         lexical_ratio: float = 0.5,
-        k: int = 5,
+        k: int = 10,
     ):
         """제목으로 유사도 검색"""
         score_dense = 1 - NoticeModel.title_vector.cosine_distance(dense_vector)
@@ -176,23 +171,23 @@ class NoticeRepository(BaseRepository[NoticeModel]):
         dense_vector: Optional[List[float]] = None,
         sparse_vector: Optional[Dict[int, float]] = None,
         lexical_ratio: float = 0.5,
-        rrf_k: int = 60,
+        rrf_k: int = 120,
         k: int = 5,
         **kwargs
     ):
+        """제목 및 내용으로 유사도 검색"""
 
-        filter = self.search_filter(**kwargs)
-        #query = query.filter(filter).limit(k)
+        filter = self._get_filters(**kwargs)
 
         score_dense_content = 1 - NoticeChunkModel.chunk_vector.cosine_distance(
             dense_vector
         )
-        score_lexical_content = -1 * (
+        score_lexical_title = -1 * (
             NoticeChunkModel.chunk_sparse_vector.max_inner_product(
                 SparseVector(sparse_vector, V_DIM)
             )
         )
-        score_content = func.max((score_lexical_content * lexical_ratio) +
+        score_content = func.max((score_lexical_title * lexical_ratio) +
                                  score_dense_content *
                                  (1 - lexical_ratio)).label("score_content")
 
@@ -211,12 +206,12 @@ class NoticeRepository(BaseRepository[NoticeModel]):
         score_dense_title = 1 - NoticeModel.title_vector.cosine_distance(
             dense_vector
         )
-        score_lexical_content = -1 * (
+        score_lexical_title = -1 * (
             NoticeModel.title_sparse_vector.max_inner_product(
                 SparseVector(sparse_vector, V_DIM)
             )
         )
-        score_title = ((score_lexical_content * lexical_ratio) +
+        score_title = ((score_lexical_title * lexical_ratio) +
                        score_dense_title *
                        (1 - lexical_ratio)).label("score_title")
 
@@ -234,9 +229,10 @@ class NoticeRepository(BaseRepository[NoticeModel]):
         query = (
             self.session.query(NoticeModel, rrf_score).join(
                 rank_content, NoticeModel.id == rank_content.c.id
-            ).join(rank_title, NoticeModel.id == rank_title.c.id).order_by(
-                rrf_score.desc()
-            ).limit(k)
+            ).join(rank_title,
+                   NoticeModel.id == rank_title.c.id).filter(filter).order_by(
+                       rrf_score.desc()
+                   ).limit(k)
         )
 
         return query.all()
