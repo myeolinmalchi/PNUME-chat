@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Time
-from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 from db.common import Base, SQLEnum
 from enum import Enum
 
@@ -100,6 +100,16 @@ class CourseModel(Base):
     timetables = relationship("CourseTimeTableModel", back_populates="course")
 
 
+class WeekdayEnum(Enum):
+    월 = "월"
+    화 = "화"
+    수 = "수"
+    목 = "목"
+    금 = "금"
+    토 = "토"
+    일 = "일"
+
+
 class CourseTimeTableModel(Base):
     """상세 시간표 테이블
 
@@ -122,7 +132,7 @@ class CourseTimeTableModel(Base):
 
     course_id = mapped_column(ForeignKey("courses.id"))
 
-    day_of_week = mapped_column(String, nullable=False)
+    day_of_week = mapped_column(SQLEnum(WeekdayEnum), nullable=False)
     building_id = mapped_column(ForeignKey("buildings.id"), nullable=True)
     classroom = mapped_column(String, nullable=False)
 
