@@ -23,6 +23,25 @@ class ProfessorRepository(BaseRepository[ProfessorModel]):
 
         return professors
 
+    def find(self, **kwargs):
+        department_model: DepartmentModel | None = kwargs.get(
+            "department", None
+        )
+        name: str | None = kwargs.get("name", None)
+
+        filters = []
+        if department_model:
+            filter = ProfessorModel.department_id == department_model.id
+            filters.append(filter)
+
+        if name:
+            filter = ProfessorModel.name.contains(name)
+            filters.append(filter)
+
+        filter = and_(*filters)
+
+        return self.session.query(ProfessorModel).filter(filter).all()
+
     def delete_by_department(self, department: str):
         department = self.session.query(DepartmentModel).filter(
             DepartmentModel.name == department
