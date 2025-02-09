@@ -12,6 +12,13 @@ from db.models.university import DepartmentModel
 class NoticeModel(Base):
     __tablename__ = "notices"
 
+    __table_args__ = (
+        Index(
+            'ix_notice_department_semester',
+            'department_id',
+            'semester_id',
+        ),
+    )
 
     url: Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
@@ -61,7 +68,9 @@ class AttachmentModel(Base):
 
     __tablename__ = "notice_attachments"
 
-    notice_id = mapped_column(ForeignKey("notices.id", ondelete="CASCADE"))
+    notice_id = mapped_column(
+        ForeignKey("notices.id", ondelete="CASCADE"), index=True
+    )
     name = mapped_column(String, nullable=False)
     url = mapped_column(String, nullable=False)
 

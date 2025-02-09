@@ -13,7 +13,9 @@ class ProfessorModel(Base):
 
     url = mapped_column(String, nullable=False, unique=True)
 
-    department_id = mapped_column(ForeignKey("departments.id"), nullable=False)
+    department_id = mapped_column(
+        ForeignKey("departments.id"), nullable=False, index=True
+    )
     major_id = mapped_column(ForeignKey("majors.id"), nullable=True)
 
     name: Mapped[str] = mapped_column(String, nullable=False)
@@ -41,7 +43,7 @@ class ProfessorDetailChunkModel(Base):
     __tablename__ = "professor_detail_chunks"
 
     professor_id = mapped_column(
-        ForeignKey("professors.id", ondelete="CASCADE")
+        ForeignKey("professors.id", ondelete="CASCADE"), index=True
     )
 
     detail = mapped_column(String, nullable=False)
