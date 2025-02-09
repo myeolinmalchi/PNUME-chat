@@ -49,6 +49,8 @@ class SemesterModel(Base):
     calendars = relationship("CalendarModel", back_populates="semester")
     courses = relationship("CourseModel", back_populates="semester")
 
+    notices = relationship("NoticeModel", back_populates="semester")
+
 
 class CalendarModel(Base):
     """학사 일정 테이블
