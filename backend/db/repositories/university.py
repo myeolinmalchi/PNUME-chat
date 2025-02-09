@@ -68,3 +68,7 @@ class UniversityRepository(BaseRepository[UniversityModel]):
             self.session.refresh(major_model)
 
         return major_model
+
+
+class BuildingRepository(BaseRepository[BuildingModel]):
+    pass
