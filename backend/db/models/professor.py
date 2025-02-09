@@ -1,7 +1,9 @@
+from typing import List
 from pgvector.sqlalchemy import SPARSEVEC, Vector
-from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy import ForeignKey, Index, String
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from db.common import N_DIM, V_DIM, Base
+from db.models.subject import CourseModel
 
 
 class ProfessorModel(Base):
@@ -27,11 +29,11 @@ class ProfessorModel(Base):
     major = relationship("MajorModel", back_populates="professors")
 
     detail: Mapped[str] = mapped_column(String, nullable=True)
-    detail_chunks = relationship(
-        "ProfessorDetailChunkModel", back_populates="professor"
-    )
+    detail_chunks: Mapped[List["ProfessorDetailChunkModel"]
+                          ] = relationship(back_populates="professor")
 
-    courses = relationship("CourseModel", back_populates="professor")
+    courses: Mapped[List["CourseModel"]
+                    ] = relationship(back_populates="professor")
 
 
 class ProfessorDetailChunkModel(Base):
@@ -46,4 +48,6 @@ class ProfessorDetailChunkModel(Base):
     dense_vector = mapped_column(Vector(N_DIM))
     sparse_vector = mapped_column(SPARSEVEC(dim=V_DIM))
 
-    professor = relationship("ProfessorModel", back_populates="detail_chunks")
+    professor: Mapped[ProfessorModel] = relationship(
+        back_populates="detail_chunks"
+    )

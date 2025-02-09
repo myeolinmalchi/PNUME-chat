@@ -57,7 +57,6 @@ class DepartmentModel(Base):
     majors = relationship("MajorModel", back_populates="department")
     professors = relationship("ProfessorModel", back_populates="department")
     notices = relationship("NoticeModel", back_populates="department")
-
     subjects = relationship("SubjectModel", back_populates="department")
 
     buildings: Mapped[List["BuildingModel"]] = relationship(
@@ -83,7 +82,7 @@ class BuildingModel(Base):
 
     __tablename__ = "buildings"
 
-    name = mapped_column(String, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     building_num: Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
     place = mapped_column(SQLEnum(PlaceEnum), nullable=True)

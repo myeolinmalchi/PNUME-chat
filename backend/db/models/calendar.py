@@ -1,5 +1,7 @@
-from sqlalchemy import Date, ForeignKey, Integer, String
-from sqlalchemy.orm import mapped_column, relationship
+from datetime import date, datetime
+from typing import Optional
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.common import Base, SQLEnum
 from enum import Enum
 
@@ -34,15 +36,15 @@ class SemesterModel(Base):
 
     __tablename__ = "semesters"
 
-    year = mapped_column(Integer, nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
     type_ = mapped_column(
-        "type",
         SQLEnum(SemesterTypeEnum),
         nullable=False,
+        name="type",
     )
 
-    st_date = mapped_column(Date, nullable=False)
-    ed_date = mapped_column(Date, nullable=False)
+    st_date: Mapped[date] = mapped_column(Date, nullable=False)
+    ed_date: Mapped[date] = mapped_column(Date, nullable=False)
 
     calendars = relationship("CalendarModel", back_populates="semester")
     courses = relationship("CourseModel", back_populates="semester")
@@ -64,13 +66,12 @@ class CalendarModel(Base):
 
     __tablename__ = "calendars"
 
+    st_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    ed_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
-    st_date = mapped_column(Date, nullable=False)
-    ed_date = mapped_column(Date, nullable=False)
+    type_: Mapped[Optional[str]] = mapped_column("type", String, nullable=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    detail: Mapped[str] = mapped_column(String, nullable=True)
 
-    type_ = mapped_column("type", String, nullable=True)
-    name = mapped_column(String, nullable=False)
-    detail = mapped_column(String, nullable=True)
-
-    semester_id = mapped_column(ForeignKey("semesters.id"))
+    semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id"), nullable=True)
     semester = relationship("SemesterModel", back_populates="calendars")
