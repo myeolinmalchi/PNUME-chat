@@ -1,4 +1,6 @@
+from typing import List
 from db.models import DepartmentModel, MajorModel, UniversityModel
+from db.models.university import BuildingModel
 from db.repositories.base import BaseRepository
 
 
@@ -36,13 +38,19 @@ class UniversityRepository(BaseRepository[UniversityModel]):
 
         return results
 
-    def find_department_by_name(self, name: str):
-        result = self.session.query(DepartmentModel).where(
-            DepartmentModel.name == name
-        ).first()
+    def find_department_by_name(self, name: str | List[str]):
+        if isinstance(name, str):
+            filter = DepartmentModel.name == name
+        else:
+            filter = DepartmentModel.name.in_(name)
+        result = self.session.query(DepartmentModel).where(filter).all()
 
-        if not result:
-            raise ValueError(f"존재하지 않는 학과입니다. ({name})")
+        if isinstance(name, str):
+            if len(result) > 0:
+                return result[0]
+
+            if len(result) == 0:
+                return None
 
         return result
 
