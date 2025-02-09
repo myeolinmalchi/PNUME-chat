@@ -1,32 +1,65 @@
-from typing import Dict, List, NotRequired, Optional, TypedDict, Unpack
+from typing import Dict, List, Optional, TypedDict, Unpack
 
 from pgvector.sqlalchemy import SparseVector
-from sqlalchemy import func, and_
+from sqlalchemy import Integer, cast, desc, func, and_, or_
 from db.models import NoticeModel, NoticeChunkModel, DepartmentModel
 from db.common import V_DIM
+from db.models.calendar import SemesterModel
+from services.base.types.calendar import DateRangeType
 from .base import BaseRepository
 
 
-class NoticeSearchFilter(TypedDict):
-    year: NotRequired[int]
-    departments: NotRequired[List[str]]
+class NoticeSearchFilterType(TypedDict, total=False):
+    year: int
+    departments: List[str]
+    date_ranges: List[DateRangeType]
+    categories: List[str]
+    semester_ids: List[int]
 
 
 class NoticeRepository(BaseRepository[NoticeModel]):
 
-    def search_filter(self, **kwargs: Unpack[NoticeSearchFilter]):
+    def _get_filters(self, **kwargs: Unpack[NoticeSearchFilterType]):
         filters = []
         if "year" in kwargs:
             year = kwargs["year"]
             filters.append(NoticeModel.date >= f"{year}-01-01 00:00:00")
             filters.append(NoticeModel.date < f"{year + 1}-01-01 00:00:00")
+
+        if "semester_ids" in kwargs:
+            semester_ids = kwargs['semester_ids']
+            filters.append(NoticeModel.semester_id.in_(semester_ids))
+
+        if "date_ranges" in kwargs:
+            date_ranges = kwargs["date_ranges"]
+            if date_ranges and len(date_ranges) > 0:
+                date_filters = []
+                for _range in kwargs["date_ranges"]:
+                    st_date = _range["st_date"]
+                    ed_date = _range["ed_date"]
+
+                    date_filters.append(
+                        and_(
+                            NoticeModel.date >= st_date, NoticeModel.date
+                            <= ed_date
+                        )
+                    )
+
+                if len(date_filters) == 1:
+                    filters.append(date_filters[0])
+
+                elif len(date_filters) > 1:
+                    filters.append(or_(*date_filters))
+
         if "departments" in kwargs:
             departments = kwargs["departments"]
-            dp = self.session.query(DepartmentModel).filter(
-                DepartmentModel.name.in_(departments)
-            ).all()
-            dp_ids = list(map(lambda d: d.id, dp))
-            filters.append(NoticeModel.department_id.in_(dp_ids))
+
+            if departments and len(departments) > 0:
+                dp = self.session.query(DepartmentModel).filter(
+                    DepartmentModel.name.in_(departments)
+                ).all()
+                dp_ids = list(map(lambda d: d.id, dp))
+                filters.append(NoticeModel.department_id.in_(dp_ids))
 
         return and_(*filters)
 
