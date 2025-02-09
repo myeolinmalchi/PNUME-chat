@@ -34,7 +34,6 @@ class SemesterModel(Base):
 
     __tablename__ = "semesters"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     year = mapped_column(Integer, nullable=False)
     type_ = mapped_column(
         "type",
@@ -65,7 +64,6 @@ class CalendarModel(Base):
 
     __tablename__ = "calendars"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     st_date = mapped_column(Date, nullable=False)
     ed_date = mapped_column(Date, nullable=False)

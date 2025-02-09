@@ -9,7 +9,6 @@ class ProfessorModel(Base):
 
     __tablename__ = "professors"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     url = mapped_column(String, nullable=False, unique=True)
 
     department_id = mapped_column(ForeignKey("departments.id"), nullable=False)
@@ -39,7 +38,6 @@ class ProfessorDetailChunkModel(Base):
     """교수 상세 정보 청크 테이블"""
     __tablename__ = "professor_detail_chunks"
 
-    chunk_id = mapped_column(Integer, primary_key=True, autoincrement=True)
     professor_id = mapped_column(
         ForeignKey("professors.id", ondelete="CASCADE")
     )

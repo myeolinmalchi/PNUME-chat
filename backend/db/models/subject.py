@@ -48,7 +48,6 @@ class SubjectModel(Base):
 
     __tablename__ = "subjects"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     department_id = mapped_column(ForeignKey("departments.id"))
     name = mapped_column(String, nullable=False)
     level = mapped_column(SQLEnum(LevelEnum), default="학부")
@@ -83,7 +82,6 @@ class CourseModel(Base):
 
     __tablename__ = "courses"
 
-    course_id = mapped_column(Integer, primary_key=True, autoincrement=True)
     subject_id = mapped_column(ForeignKey("subjects.id"))
     professor_id = mapped_column(ForeignKey("professors.id"))
     semester_id = mapped_column(ForeignKey("semesters.id"))

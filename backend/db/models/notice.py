@@ -8,7 +8,6 @@ from typing import List
 class NoticeModel(Base):
     __tablename__ = "notices"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     url = mapped_column(String, nullable=False, unique=True)
 
     category = mapped_column(String, nullable=False)
@@ -36,7 +35,6 @@ class NoticeModel(Base):
 class NoticeChunkModel(Base):
     __tablename__ = "notice_content_chunks"
 
-    chunk_id = mapped_column(Integer, primary_key=True, autoincrement=True)
     notice_id = mapped_column(ForeignKey("notices.id", ondelete="CASCADE"))
     chunk_content = mapped_column(String, nullable=False)
     chunk_vector = mapped_column(Vector(N_DIM))
@@ -52,7 +50,6 @@ class AttachmentModel(Base):
 
     __tablename__ = "notice_attachments"
 
-    attachment_id = mapped_column(Integer, primary_key=True, autoincrement=True)
     notice_id = mapped_column(ForeignKey("notices.id", ondelete="CASCADE"))
     name = mapped_column(String, nullable=False)
     url = mapped_column(String, nullable=False)

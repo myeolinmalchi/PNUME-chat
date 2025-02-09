@@ -30,7 +30,6 @@ class SupportChunkModel(Base):
 
     __tablename__ = "support_content_chunks"
 
-    chunk_id = mapped_column(Integer, primary_key=True, autoincrement=True)
     support_id = mapped_column(ForeignKey("supports.id", ondelete="CASCADE"))
     chunk_content = mapped_column(String, nullable=False)
     chunk_vector = mapped_column(Vector(dim=N_DIM), nullable=True)
@@ -44,7 +43,6 @@ class SupportAttachmentModel(Base):
 
     __tablename__ = "support_attachments"
 
-    attachment_id = mapped_column(Integer, primary_key=True, autoincrement=True)
     support_id = mapped_column(ForeignKey("supports.id", ondelete="CASCADE"))
     name = mapped_column(String, nullable=False)
     url = mapped_column(String, nullable=False)

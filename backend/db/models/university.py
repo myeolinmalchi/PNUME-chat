@@ -50,7 +50,6 @@ class DepartmentModel(Base):
 
     __tablename__ = "departments"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     university_id = mapped_column(ForeignKey("universities.id"))
     name = mapped_column(String, nullable=False)
     university = relationship("UniversityModel", back_populates="departments")
@@ -84,7 +83,6 @@ class BuildingModel(Base):
 
     __tablename__ = "buildings"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
     name = mapped_column(String, nullable=False, unique=True)
     building_num: Mapped[str] = mapped_column(String, nullable=False, unique=True)
 
