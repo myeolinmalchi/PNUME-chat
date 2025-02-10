@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, TypedDict, Unpack
+from typing import Dict, List, NotRequired, Optional, TypedDict, Unpack
 
 from pgvector.sqlalchemy import SparseVector
 from sqlalchemy import Integer, cast, desc, func, and_, or_
@@ -14,7 +14,7 @@ class NoticeSearchFilterType(TypedDict, total=False):
     departments: List[str]
     date_ranges: List[DateRangeType]
     categories: List[str]
-    semester_ids: List[int]
+    semester_ids: NotRequired[List[int]]
 
 
 class NoticeRepository(BaseRepository[NoticeModel]):
@@ -173,7 +173,7 @@ class NoticeRepository(BaseRepository[NoticeModel]):
         lexical_ratio: float = 0.5,
         rrf_k: int = 120,
         k: int = 5,
-        **kwargs
+        **kwargs: Unpack[NoticeSearchFilterType]
     ):
         """제목 및 내용으로 유사도 검색"""
 
