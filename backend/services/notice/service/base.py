@@ -17,6 +17,13 @@ from services.notice.crawler.base import NoticeCrawlerBase
 logger = logging.getLogger(__name__)
 
 
+class SearchOptions(TypedDict, total=False):
+    count: NotRequired[int]
+    lexical_ratio: NotRequired[float]
+    semesters: Required[List[SemesterType]]
+    departments: Required[List[str]]
+
+
 class NoticeServiceBase(BaseService):
 
     def __init__(
@@ -81,25 +88,34 @@ class NoticeServiceBase(BaseService):
     async def run_full_crawling_pipeline_async(self, **kwargs) -> List[NoticeModel]:
         pass
 
-    class SearchOptions(TypedDict):
-        count: NotRequired[int]
-        lexical_ratio: NotRequired[float]
-
-    def search_notices_with_filter(self, query: str, **opts: Unpack[SearchOptions]):
-        from time import time
-        st = time()
+    @transaction()
+    def search_notices_with_filter(
+        self, query: str, **opts: Unpack[SearchOptions]
+    ):
         embed_result = self.notice_embedder._embed_query(query, chunking=False)
-        logger.info(f"embed query: {time() - st:.4f}")
 
-        st = time()
+        semesters = opts['semesters']
+        departments = opts['departments']
+
+        if not self.semester_repo:
+            raise ValueError("'NoticeService.semester_repo' must be provided")
+
+        semester_ids = []
+
+        semester_models = self.semester_repo.search_semesters(semesters)
+        if not semester_models:
+            raise ValueError(f"학기 정보를 찾을 수 없습니다: {semesters}")
+
+        assert isinstance(semester_models, list)
+        semester_ids = [s.id for s in semester_models]
+
         search_results = self.notice_repo.search_notices_hybrid(
             dense_vector=embed_result["dense"],
             sparse_vector=embed_result["sparse"],
             lexical_ratio=opts.get("lexical_ratio", 0.5),
+            semester_ids=semester_ids,
+            departments=departments,
             k=opts.get("count", 5),
-            year=2024,
-            departments=["정보컴퓨터공학부"]
         )
-        logger.info(f"hybrid search: {time() - st:.4f}")
 
         return search_results
