@@ -1,16 +1,24 @@
-from sqlalchemy import Date, ForeignKey, Integer, String
-from sqlalchemy.orm import mapped_column, relationship
+from datetime import date, datetime
+from typing import Optional
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.common import Base, SQLEnum
 from enum import Enum
 
 
 class SemesterTypeEnum(Enum):
-    """학기 구분 ENUM"""
+    """학기 구분 ENUM
+
+    "여름 계절학기", "겨울 계절학기", "미분류" -> DB에는 있지만 사용하지 않음.
+    """
     spring_semester = "1학기"
     fall_semester = "2학기"
-    summer_session = "여름 계절학기"
-    winter_session = "겨울 계절학기"
-    unassigned = "미분류"
+    summer_vacation = "여름방학"
+    winter_vacation = "겨울방학"
+
+    #summer_session = "여름 계절학기"
+    #winter_session = "겨울 계절학기"
+    #unassigned = "미분류"
 
 
 class SemesterModel(Base):
@@ -28,19 +36,20 @@ class SemesterModel(Base):
 
     __tablename__ = "semesters"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    year = mapped_column(Integer, nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
     type_ = mapped_column(
-        "type",
         SQLEnum(SemesterTypeEnum),
         nullable=False,
+        name="type",
     )
 
-    st_date = mapped_column(Date, nullable=False)
-    ed_date = mapped_column(Date, nullable=False)
+    st_date: Mapped[date] = mapped_column(Date, nullable=False)
+    ed_date: Mapped[date] = mapped_column(Date, nullable=False)
 
     calendars = relationship("CalendarModel", back_populates="semester")
     courses = relationship("CourseModel", back_populates="semester")
+
+    notices = relationship("NoticeModel", back_populates="semester")
 
 
 class CalendarModel(Base):
@@ -59,14 +68,12 @@ class CalendarModel(Base):
 
     __tablename__ = "calendars"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    st_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    ed_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
-    st_date = mapped_column(Date, nullable=False)
-    ed_date = mapped_column(Date, nullable=False)
+    type_: Mapped[Optional[str]] = mapped_column("type", String, nullable=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    detail: Mapped[str] = mapped_column(String, nullable=True)
 
-    type_ = mapped_column("type", String, nullable=True)
-    name = mapped_column(String, nullable=False)
-    detail = mapped_column(String, nullable=True)
-
-    semester_id = mapped_column(ForeignKey("semesters.id"))
+    semester_id: Mapped[int] = mapped_column(ForeignKey("semesters.id"), nullable=True)
     semester = relationship("SemesterModel", back_populates="calendars")

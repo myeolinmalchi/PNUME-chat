@@ -1,4 +1,4 @@
-from abc import ABC
+from abc import ABC, ABCMeta
 from functools import wraps
 from typing import Callable, Dict, Any
 
@@ -10,7 +10,7 @@ from mixins.asyncio import semaphore
 logger = logging.getLogger(__name__)
 
 
-class HTTPMetaclass(type, ABC):
+class HTTPMetaclass(ABCMeta):
 
     def __new__(cls, name, bases, attrs):
         cls.apply_wrapper(attrs)
@@ -41,8 +41,8 @@ def session_wrapper(func):
     @wraps(func)
     async def wrapped(*args, **kwargs):
         async with semaphore():
-            sig = signature(func)
-            if 'session' in sig.parameters and ('session' not in kwargs or kwargs['session'] is None):
+            #sig = signature(func)
+            if 'session' not in kwargs or kwargs['session'] is None:
                 timeout = aiohttp.ClientTimeout(total=60)
                 async with aiohttp.ClientSession(timeout=timeout) as sess:
                     kwargs['session'] = sess

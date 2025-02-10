@@ -1,7 +1,7 @@
 from typing import List, Dict
 
 from pgvector.sqlalchemy import SparseVector
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from db.common import V_DIM
 from db.models import ProfessorModel, DepartmentModel
 from db.models.professor import ProfessorDetailChunkModel
@@ -13,7 +13,9 @@ class ProfessorRepository(BaseRepository[ProfessorModel]):
     def create_all(self, objects):
         professors = []
         for professor in objects:
-            professor_model = self.session.query(ProfessorModel).filter(ProfessorModel.url == professor.url).first()
+            professor_model = self.session.query(ProfessorModel).filter(
+                ProfessorModel.url == professor.url
+            ).first()
 
             if not professor_model:
                 professors.append(professor)
@@ -23,15 +25,35 @@ class ProfessorRepository(BaseRepository[ProfessorModel]):
 
         return professors
 
+    def find(self, **kwargs):
+        department_model: DepartmentModel | None = kwargs.get(
+            "department", None
+        )
+        name: str | None = kwargs.get("name", None)
+
+        filters = []
+        if department_model:
+            filter = ProfessorModel.department_id == department_model.id
+            filters.append(filter)
+
+        if name:
+            filter = ProfessorModel.name.contains(name)
+            filters.append(filter)
+
+        filter = and_(*filters)
+
+        return self.session.query(ProfessorModel).filter(filter).all()
+
     def delete_by_department(self, department: str):
-        department = self.session.query(DepartmentModel).filter(
+        department_model = self.session.query(DepartmentModel).filter(
             DepartmentModel.name == department
         ).one_or_none()
-        if department is None:
+
+        if department_model is None:
             raise ValueError(f"존재하지 않는 학과입니다: {department}")
 
         affected = self.session.query(ProfessorModel).filter(
-            ProfessorModel.department_id == department.id
+            ProfessorModel.department_id == department_model.id
         ).delete()
 
         return affected
@@ -44,7 +66,7 @@ class ProfessorRepository(BaseRepository[ProfessorModel]):
         k: int = 5,
     ):
         """내용으로 유사도 검색"""
-        score_dense = 1 - ProfessorDetailChunkModel.dense_vector.cosine_distance(
+        score_dense = 1 - ProfessorDetailChunkModel.dense_vector.max_inner_product(
             dense_vector
         )
         score_lexical = -1 * (

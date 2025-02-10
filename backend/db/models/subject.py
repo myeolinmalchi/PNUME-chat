@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Time
-from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 from db.common import Base, SQLEnum
 from enum import Enum
 
@@ -48,17 +48,15 @@ class SubjectModel(Base):
 
     __tablename__ = "subjects"
 
-    id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    department_id = mapped_column(ForeignKey("departments.id"))
-    name = mapped_column(String, nullable=False)
-    level = mapped_column(SQLEnum(LevelEnum), default="학부")
-    type_ = mapped_column(SQLEnum(SubjectTypeEnum), name="type", nullable=False)
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    level: Mapped[LevelEnum] = mapped_column(SQLEnum(LevelEnum), default="학부")
+    type_: Mapped[SubjectTypeEnum] = mapped_column(SQLEnum(SubjectTypeEnum), name="type", nullable=False)
 
-    grade = mapped_column(SQLEnum(GradeEnum), nullable=True)
-    code = mapped_column(String, nullable=False)
+    grade: Mapped[GradeEnum] = mapped_column(SQLEnum(GradeEnum), nullable=True)
+    code: Mapped[str] = mapped_column(String, nullable=False)
 
     department = relationship("DepartmentModel", back_populates="subjects")
-
     courses = relationship("CourseModel", back_populates="subject")
 
 
@@ -83,7 +81,6 @@ class CourseModel(Base):
 
     __tablename__ = "courses"
 
-    course_id = mapped_column(Integer, primary_key=True, autoincrement=True)
     subject_id = mapped_column(ForeignKey("subjects.id"))
     professor_id = mapped_column(ForeignKey("professors.id"))
     semester_id = mapped_column(ForeignKey("semesters.id"))
@@ -94,11 +91,23 @@ class CourseModel(Base):
 
     credit = mapped_column(Float, nullable=False)
 
+    note: Mapped[str] = mapped_column(String, nullable=True)
+
     subject = relationship("SubjectModel", back_populates="courses")
     professor = relationship("ProfessorModel", back_populates="courses")
     semester = relationship("SemesterModel", back_populates="courses")
 
     timetables = relationship("CourseTimeTableModel", back_populates="course")
+
+
+class WeekdayEnum(Enum):
+    월 = "월"
+    화 = "화"
+    수 = "수"
+    목 = "목"
+    금 = "금"
+    토 = "토"
+    일 = "일"
 
 
 class CourseTimeTableModel(Base):
@@ -121,10 +130,9 @@ class CourseTimeTableModel(Base):
 
     __tablename__ = "timetables"
 
-    timetable_id = mapped_column(Integer, primary_key=True, autoincrement=True)
-    course_id = mapped_column(ForeignKey("courses.course_id"))
+    course_id = mapped_column(ForeignKey("courses.id"))
 
-    day_of_week = mapped_column(String, nullable=False)
+    day_of_week = mapped_column(SQLEnum(WeekdayEnum), nullable=False)
     building_id = mapped_column(ForeignKey("buildings.id"), nullable=True)
     classroom = mapped_column(String, nullable=False)
 

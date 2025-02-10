@@ -34,23 +34,30 @@ class PageNameModel(BaseModel):
     detail_model:DetailModel
     page_name:str = Field(..., description="Name of current page view.")
 
-class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
+class BaseCrawler(ABC, Generic[DTO], metaclass=HTTPMetaclass):
 
-    async def scrape_detail_async(self,
-                                  dtos: List[DTO],
-                                  session: Optional[ClientSession] = None,
-                                  **kwargs) -> List[DTO]:
+    async def scrape_detail_async(
+        self,
+        dtos: List[DTO],
+        session: Optional[ClientSession] = None,
+        **kwargs
+    ) -> List[DTO]:
         if session is None:
             raise ValueError("parameter 'session' cannot be None.")
 
-        return await self._scrape_detail_async(dtos, session, **kwargs)
+        return await self._scrape_detail_async(dtos, session=session, **kwargs)
 
-    async def _scrape_detail_async(self, dtos: List[DTO], session: ClientSession, **kwargs) -> List[DTO]:
+    async def _scrape_detail_async(
+        self, dtos: List[DTO], session: ClientSession, **kwargs
+    ) -> List[DTO]:
         urls = [dto["url"] for dto in dtos]
         soups = await self._scrape_async(urls, session=session)
 
         loop = asyncio.get_running_loop()
-        tasks = [loop.run_in_executor(None, self._parse_detail, dto, soup) for soup, dto in zip(soups, dtos)]
+        tasks = [
+            loop.run_in_executor(None, self._parse_detail, dto, soup)
+            for soup, dto in zip(soups, dtos)
+        ]
 
         dtos_ = await asyncio.gather(*tasks)
         dtos_ = [dto for dto in dtos_ if dto]
@@ -62,20 +69,29 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         pass
 
     @overload
-    async def _scrape_async(self, url: str, session: ClientSession, retry_delay: float = 5.0) -> BeautifulSoup:
+    async def _scrape_async(
+        self,
+        url: str,
+        session: ClientSession,
+        retry_delay: float = 5.0
+    ) -> BeautifulSoup:
         ...
 
     @overload
-    async def _scrape_async(self,
-                            url: List[str],
-                            session: ClientSession,
-                            retry_delay: float = 5.0) -> List[BeautifulSoup]:
+    async def _scrape_async(
+        self,
+        url: List[str],
+        session: ClientSession,
+        retry_delay: float = 5.0
+    ) -> List[BeautifulSoup]:
         ...
 
-    async def _scrape_async(self,
-                            url: str | List[str],
-                            session: ClientSession,
-                            retry_delay: float = 5.0) -> BeautifulSoup | List[BeautifulSoup]:
+    async def _scrape_async(
+        self,
+        url: str | List[str],
+        session: ClientSession,
+        retry_delay: float = 5.0
+    ) -> BeautifulSoup | List[BeautifulSoup]:
 
         @retry_async(delay=retry_delay)
         async def scrape_coroutine(_url):
@@ -92,15 +108,28 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         return await asyncio.gather(*[scrape_coroutine(_url) for _url in url])
 
     @overload
-    def _scrape(self, url: str, timeout: int = 600, is_success=lambda _: True) -> BeautifulSoup:
+    def _scrape(
+        self,
+        url: str,
+        timeout: int = 600,
+        is_success=lambda _: True
+    ) -> BeautifulSoup:
         ...
 
     @overload
-    def _scrape(self, url: List[str], timeout: int = 600, is_success=lambda _: True) -> List[BeautifulSoup]:
+    def _scrape(
+        self,
+        url: List[str],
+        timeout: int = 600,
+        is_success=lambda _: True
+    ) -> List[BeautifulSoup]:
         ...
 
     def _scrape(
-        self, url: str | List[str], timeout: int = 600, is_success: Callable[[BeautifulSoup], bool] = lambda _: True
+        self,
+        url: str | List[str],
+        timeout: int = 600,
+        is_success: Callable[[BeautifulSoup], bool] = lambda _: True
     ):
 
         @retry_sync(is_success=is_success)
@@ -133,7 +162,7 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         text = re.sub(exclude_base64, "", text)
         re.sub(r"\s+", " ", text).strip()
         return text
-    
+
     def extract_links(self, url: str) -> List[str]:
         try:
             headers = {
@@ -153,7 +182,7 @@ class BaseCrawler(Generic[DTO], metaclass=HTTPMetaclass):
         except requests.RequestException as e:
             print(f"Error fetching URL: {e}")
             return []
-        
+
     def extract_links_filter(self, url: str) -> List[str]:
 
         exclude_keywords = ['sitemap', 'sites', 'subLogin', 'userSbscrb', 'onestop', 'cmmCon', 'go', 'hrd', 'job','lib', 'plato', 'certpia', 'webmail', '@', 'https://www.pusan.ac.kr', 'http://www.pusan.ac.kr']
