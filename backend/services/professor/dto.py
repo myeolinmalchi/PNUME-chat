@@ -1,7 +1,7 @@
 from typing import List, NotRequired, Required, TypedDict
 
 from services.base import EmbedResult
-from services.base.crawler import BaseDTO
+from services.base.dto import BaseDTO
 
 
 class ProfessorInfoDTO(TypedDict):
@@ -20,6 +20,6 @@ class ProfessorInfoDTO(TypedDict):
     major: NotRequired[str]
 
 
-class ProfessorDTO(BaseDTO):
-    info: ProfessorInfoDTO
+class ProfessorDTO(BaseDTO, total=False):
+    info: Required[ProfessorInfoDTO]
     embeddings: List[EmbedResult]
