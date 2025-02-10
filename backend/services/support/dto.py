@@ -22,7 +22,7 @@ class SupportEmbeddingsDTO(TypedDict):
     content_embeddings: List[EmbedResult]
 
 
-class SupportDTO(BaseDTO):
+class SupportDTO(BaseDTO, total=False):
     info: SupportInfoDTO
     embeddings: SupportEmbeddingsDTO
     attachments: List[SupportAttachmentDTO]
