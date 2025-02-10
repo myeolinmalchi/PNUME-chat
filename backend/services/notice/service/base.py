@@ -20,13 +20,18 @@ logger = logging.getLogger(__name__)
 class NoticeServiceBase(BaseService):
 
     def __init__(
-        self, notice_repo: NoticeRepository, notice_embedder: NoticeEmbedder, notice_crawler: NoticeCrawlerBase,
-        university_repo: UniversityRepository
+        self,
+        notice_repo: NoticeRepository,
+        notice_embedder: NoticeEmbedder,
+        notice_crawler: NoticeCrawlerBase,
+        university_repo: UniversityRepository,
+        semester_repo: Optional[SemesterRepository] = None
     ):
         self.notice_repo = notice_repo
         self.notice_embedder = notice_embedder
         self.notice_crawler = notice_crawler
         self.university_repo = university_repo
+        self.semester_repo = semester_repo
 
     def parse_info(self, dto):
         info = dto.get("info")
