@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, List, Optional
+from typing import Generic, List, Optional, Unpack
 
 from aiohttp import ClientSession
 import requests
@@ -19,9 +19,7 @@ EMBED_URL = os.environ.get("EMBED_URL")
 
 class BaseEmbedder(ABC, Generic[DTO], metaclass=HTTPMetaclass):
 
-    async def embed_dtos_async(
-        self, items: List[DTO], **kwargs: SessionArgsType
-    ) -> List[DTO]:
+    async def embed_dtos_async(self, items: List[DTO], **kwargs) -> List[DTO]:
         session = kwargs.get("session")
         if not session or type(session) is not ClientSession:
             raise ValueError("'session' argument must be provided.")
@@ -29,16 +27,11 @@ class BaseEmbedder(ABC, Generic[DTO], metaclass=HTTPMetaclass):
         return await self._embed_dtos_async(items, **kwargs)
 
     @abstractmethod
-    async def _embed_dtos_async(
-        self, items: List[DTO], **kwargs: SessionArgsType
-    ) -> List[DTO]:
+    async def _embed_dtos_async(self, items: List[DTO], **kwargs) -> List[DTO]:
         pass
 
     async def embed_dtos_batch_async(
-        self,
-        items: List[DTO],
-        batch_size: int = 30,
-        **kwargs: SessionArgsType
+        self, items: List[DTO], batch_size: int = 30, **kwargs
     ) -> List[DTO]:
         session = kwargs.get("session")
         if not session or type(session) is not ClientSession:
@@ -61,10 +54,15 @@ class BaseEmbedder(ABC, Generic[DTO], metaclass=HTTPMetaclass):
     async def _embed_async(
         self,
         texts: str | List[str],
-        session: ClientSession,
+        #session: ClientSession,
         chunking: bool = True,
         truncate: bool = True,
+        **kwargs,
     ) -> EmbedResult | List[EmbedResult]:
+        session = kwargs.get('session')
+        if not session:
+            raise ValueError("'session' must be provided.")
+
         body = {
             "inputs": texts,
             "chunking": chunking,
