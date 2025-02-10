@@ -33,32 +33,38 @@ class NoticeServiceBase(BaseService):
         self.university_repo = university_repo
         self.semester_repo = semester_repo
 
-    def parse_info(self, dto):
+    def _parse_info(self, dto):
         info = dto.get("info")
         return info if info else {}
 
-    def parse_attachments(self, dto):
+    def _parse_attachments(self, dto):
         attachments = dto.get("attachments")
-        return {"attachments": [AttachmentModel(**att) for att in attachments]} if attachments else {}
+        return {
+            "attachments": [AttachmentModel(**att) for att in attachments]
+        } if attachments else {}
 
-    def parse_embeddings(self, dto):
+    def _parse_embeddings(self, dto):
         embeddings = dto.get("embeddings")
         return {
-            "title_sparse_vector": SparseVector(embeddings["title_embeddings"]["sparse"], V_DIM),
+            "title_sparse_vector": SparseVector(
+                embeddings["title_embeddings"]["sparse"], V_DIM
+            ),
             "title_vector": embeddings["title_embeddings"]["dense"],
             "content_chunks": [
                 NoticeChunkModel(
                     chunk_content=content_vector["chunk"],
                     chunk_vector=content_vector["dense"],
-                    chunk_sparse_vector=SparseVector(content_vector["sparse"], V_DIM),
+                    chunk_sparse_vector=SparseVector(
+                        content_vector["sparse"], V_DIM
+                    ),
                 ) for content_vector in embeddings["content_embeddings"]
             ]
         } if embeddings else {}
 
     def dto2orm(self, dto: NoticeDTO) -> Optional[NoticeModel]:
-        info = self.parse_info(dto)
-        attachments = self.parse_attachments(dto)
-        embeddings = self.parse_embeddings(dto)
+        info = self._parse_info(dto)
+        attachments = self._parse_attachments(dto)
+        embeddings = self._parse_embeddings(dto)
 
         if not info:
             return None
