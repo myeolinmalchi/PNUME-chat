@@ -1,15 +1,20 @@
 from abc import abstractmethod
 import logging
-from typing import List, NotRequired, Optional, TypedDict, Unpack
+from typing import List, NotRequired, Optional, Required, TypedDict, Unpack
 from pgvector.sqlalchemy import SparseVector
 
 from db.common import V_DIM
 from db.models import AttachmentModel, NoticeChunkModel, NoticeModel
+from db.models.calendar import SemesterModel
+from db.models.university import DepartmentModel
 from db.repositories import NoticeRepository
 
+from db.repositories.base import transaction
+from db.repositories.calendar import SemesterRepository
 from db.repositories.university import UniversityRepository
 from services.base import BaseService
 
+from services.base.types.calendar import DateRangeType, SemesterType
 from services.notice.dto import NoticeDTO
 from services.notice.embedder import NoticeEmbedder
 from services.notice.crawler.base import NoticeCrawlerBase
@@ -76,16 +81,26 @@ class NoticeServiceBase(BaseService):
         if not info:
             return None
 
-        dep_id = self.university_repo.find_department_by_name(info["department"])
+        department_model = self.university_repo.find_department_by_name(
+            info["department"]
+        )
+        assert type(department_model) is DepartmentModel
         del info["department"]
 
-        return NoticeModel(**info, **attachments, **embeddings, url=dto["url"], department_id=dep_id.id)
+        return NoticeModel(
+            **info,
+            **attachments,
+            **embeddings,
+            url=dto["url"],
+            department_id=department_model.id
+        )
 
     def orm2dto(self, orm: NoticeModel) -> NoticeDTO:
         ...
 
     @abstractmethod
-    async def run_full_crawling_pipeline_async(self, **kwargs) -> List[NoticeModel]:
+    async def run_full_crawling_pipeline_async(self,
+                                               **kwargs) -> List[NoticeModel]:
         pass
 
     @transaction()
