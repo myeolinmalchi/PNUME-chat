@@ -66,29 +66,45 @@ class SupportService(BaseService):
         for category_key in url_dict.keys():
             sub_categories = url_dict[category_key]
             if isinstance(sub_categories, str):
-                _info = {"category": category_key, "title": category_key}
-                dtos.append(SupportDTO(info=_info, url=sub_categories))
+                _info = {
+                    "category": category_key,
+                    "title": category_key
+                }
+                dtos.append(
+                    SupportDTO(**{
+                        "info": _info,
+                        "url": sub_categories
+                    })
+                )
                 continue
 
             for sub_key in sub_categories.keys():
                 sub_category = sub_categories[sub_key]
                 if isinstance(sub_category, str):
                     info = SupportDTO(
-                        info={
-                            "category": category_key,
-                            "sub_category": sub_key,
-                            "title": sub_key
-                        }, url=sub_category
+                        **{
+                            "info": {
+                                "category": category_key,
+                                "sub_category": sub_key,
+                                "title": sub_key
+                            },
+                            "url": sub_category
+                        }
                     )
                     dtos.append(info)
                     continue
 
                 dtos_ = [
-                    SupportDTO(info={
-                        "category": category_key,
-                        "sub_category": sub_key,
-                        "title": title
-                    }, url=url) for title, url in sub_category.items()
+                    SupportDTO(
+                        **{
+                            "info": {
+                                "category": category_key,
+                                "sub_category": sub_key,
+                                "title": title
+                            },
+                            "url": url
+                        }
+                    ) for title, url in sub_category.items()
                 ]
 
                 dtos += dtos_
