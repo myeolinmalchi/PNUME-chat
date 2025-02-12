@@ -1,5 +1,4 @@
-from datetime import time
-from typing import List, Optional
+from typing import List
 
 from bs4 import BeautifulSoup
 from services.professor.crawler.base import ProfessorCrawlerBase
@@ -22,11 +21,11 @@ SELECTORs = {
 
 INFO_MAP = {
     "name_eng": ["영문이름"],
-    "email": ["이메일"],
-    "office_phone": ["전화번호"],
-    "website": ["사이트"],
-    "lab_addr": ["사무실"],
-    "major": ["연구분야", "전공"],
+    "email": ["이메일", "Email", "email"],
+    "office_phone": ["전화번호", "Tel", "Phone", "tel", "phone"],
+    "website": ["사이트", "Site", "Hompage", "site"],
+    "lab_addr": ["사무실", "Office", "office"],
+    "major": ["연구분야", "전공", "Research Area", "Field", "major", "Major"],
 }
 
 
@@ -61,32 +60,7 @@ class ProfessorCrawler(ProfessorCrawlerBase):
 
         return paths
 
-    async def _scrape_partial_async(self, session, **kwargs):
-        department = kwargs.get('department')
-        urls = kwargs.get('urls')
-
-        if not urls or not department:
-            raise ValueError
-
-        soups = await self._scrape_async(urls, session=session)
-        loop = asyncio.get_running_loop()
-        tasks = [
-            loop.run_in_executor(None, self._parse_detail, soup)
-            for soup in soups
-        ]
-
-        professors = await asyncio.gather(*tasks)
-
-        for professor, url in zip(professors, urls):
-            if professor and "info" in professor:
-                professor["url"] = url
-                professor["info"]["department"] = department
-
-        professors = [professor for professor in professors if professor]
-
-        return professors
-
-    def _parse_detail(self, soup: BeautifulSoup) -> Optional[ProfessorDTO]:
+    def _parse_detail(self, dto, soup):
         """교수님 상세 정보 파싱"""
 
         _info = {}
@@ -101,7 +75,7 @@ class ProfessorCrawler(ProfessorCrawlerBase):
             src = thumbnail_element["src"]
             _info["profile_img"] = str(src)
 
-        _info["name"] = self._preprocess_text(name_element.text, True)
+        _info["name"] = self._preprocess_text(name_element.text)
 
         common_elements = soup.select(SELECTORs["detail"]["common"])
         for e in common_elements:
@@ -111,8 +85,8 @@ class ProfessorCrawler(ProfessorCrawlerBase):
             if not dt or not dd:
                 continue
 
-            category = dt.get_text(separator="", strip=True)
-            content = dd.get_text(separator="", strip=True)
+            category = dt.get_text(separator=" ", strip=True)
+            content = dd.get_text(separator=" ", strip=True)
 
             for key, keywords in INFO_MAP.items():
                 if category in keywords:
@@ -122,13 +96,14 @@ class ProfessorCrawler(ProfessorCrawlerBase):
         detail_elements = soup.select("div._prFlDetail")
 
         def preprocess(element):
-            text = element.get_text(separator="", strip=True)
-            return self._preprocess_text(md(text), True)
+            text = element.get_text(separator=" ", strip=True)
+            return self._preprocess_text(md(text))
 
         if len(detail_elements) > 0:
             details = [preprocess(e) for e in detail_elements]
             _info["detail"] = "\n\n".join(details)
 
-        _dto = {"info": _info, "url": ""}
+        _info = {**_info, **dto["info"]}
+        _dto = {**dto, "info": _info}
 
         return ProfessorDTO(**_dto)

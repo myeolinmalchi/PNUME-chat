@@ -10,17 +10,17 @@ import asyncio
 import argparse
 import logging
 
-from services.notice_me.service import create_notice_me_service
+from services.notice import create_notice_service
 
 logger = logging.getLogger(__name__)
 
 
 async def run(lexical_ratio: float, query: str):
-    notice_service = create_notice_me_service()
+    notice_service = create_notice_service()
 
     try:
         search_results = notice_service.search_notices_with_filter(
-            query, lexical_ratio=lexical_ratio
+            query, lexical_ratio=lexical_ratio, count=10
         )
 
         for idx, (notice, score) in enumerate(search_results):
