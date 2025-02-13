@@ -108,3 +108,6 @@ class NoticeService(NoticeServiceBase):
             raise e
 
         return models
+
+if __name__ == '__main__':
+    print('adsf')
