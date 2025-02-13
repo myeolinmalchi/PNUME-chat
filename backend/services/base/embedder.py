@@ -1,5 +1,5 @@
-from abc import abstractmethod
-from typing import Dict, Generic, List, NotRequired, Optional, TypeVar, TypedDict
+from abc import ABC, abstractmethod
+from typing import Generic, List, Optional, Unpack
 
 from aiohttp import ClientSession
 import requests
@@ -9,60 +9,65 @@ from mixins.http_client import HTTPMetaclass
 from dotenv import load_dotenv
 import os
 
+from services.base.dto import DTO, EmbedResult
+from services.base.types.http_client import SessionArgsType
+
 load_dotenv()
 
 EMBED_URL = os.environ.get("EMBED_URL")
 
 
-class EmbedResult(TypedDict):
-    chunk: NotRequired[str]
-    dense: List[float]
-    sparse: Dict[int, float]
+class BaseEmbedder(ABC, Generic[DTO], metaclass=HTTPMetaclass):
 
+    async def embed_dtos_async(self, items: List[DTO], **kwargs) -> List[DTO]:
+        session = kwargs.get("session")
+        if not session or type(session) is not ClientSession:
+            raise ValueError("'session' argument must be provided.")
 
-DTO = TypeVar("DTO")
-
-
-class BaseEmbedder(Generic[DTO], metaclass=HTTPMetaclass):
-
-    async def embed_dto_async(
-        self, item: DTO, session: Optional[ClientSession] = None
-    ) -> DTO:
-        if session is None:
-            raise ValueError("parameter 'session' cannot be None.")
-
-        return await self._embed_dto_async(item, session=session)
+        return await self._embed_dtos_async(items, **kwargs)
 
     @abstractmethod
-    async def _embed_dto_async(self, item: DTO, session: ClientSession) -> DTO:
+    async def _embed_dtos_async(self, items: List[DTO], **kwargs) -> List[DTO]:
         pass
 
-    async def embed_all_async(
-        self,
-        items: List[DTO],
-        interval: int = 30,
-        session: Optional[ClientSession] = None,
+    async def embed_dtos_batch_async(
+        self, items: List[DTO], batch_size: int = 30, **kwargs
     ) -> List[DTO]:
-        if session is None:
-            raise ValueError("parameter 'session' cannot be None.")
+        session = kwargs.get("session")
+        if not session or type(session) is not ClientSession:
+            raise ValueError("'session' argument must be provided.")
 
-        return await self._embed_all_async(items, interval, session=session)
+        def parts(_list: List[DTO], n):
+            for idx in range(0, len(_list), n):
+                yield _list[idx:idx + n]
 
-    @abstractmethod
-    async def _embed_all_async(
-        self, items: List[DTO], interval: int, session: ClientSession
-    ) -> List[DTO]:
-        pass
+        parted_items = list(parts(items, batch_size))
+
+        xss = [
+            await self.embed_dtos_async(_items, session=session)
+            for _items in parted_items
+        ]
+
+        return [x for xs in xss for x in xs]
 
     @retry_async(delay=3)
     async def _embed_async(
         self,
         texts: str | List[str],
-        session: ClientSession,
+        #session: ClientSession,
         chunking: bool = True,
         truncate: bool = True,
+        **kwargs,
     ) -> EmbedResult | List[EmbedResult]:
-        body = {"inputs": texts, "chunking": chunking, "truncate": truncate}
+        session = kwargs.get('session')
+        if not session:
+            raise ValueError("'session' must be provided.")
+
+        body = {
+            "inputs": texts,
+            "chunking": chunking,
+            "truncate": truncate
+        }
         async with session.post(f"{EMBED_URL}/embed", json=body) as res:
             if res.status == 200:
                 data = await res.json()
@@ -76,7 +81,11 @@ class BaseEmbedder(Generic[DTO], metaclass=HTTPMetaclass):
         chunking: bool = True,
         truncate: bool = True
     ):
-        body = {"inputs": query, "chunking": chunking, "truncate": truncate}
+        body = {
+            "inputs": query,
+            "chunking": chunking,
+            "truncate": truncate
+        }
         res = requests.post(f"{EMBED_URL}/embed", json=body)
         if res.status_code == 200:
             return res.json()

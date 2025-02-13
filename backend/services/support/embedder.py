@@ -1,5 +1,4 @@
 import asyncio
-from typing import List
 
 from services.base import BaseEmbedder
 from services.support.dto import SupportDTO
@@ -7,46 +6,31 @@ from services.support.dto import SupportDTO
 
 class SupportEmbedder(BaseEmbedder[SupportDTO]):
 
-    async def _embed_all_async(self, items, interval, session):
+    async def _embed_dtos_async(self, items, session):
+        _supports = [support for support in items if "info" in support]
+        _infos = [support["info"] for support in _supports]
 
-        def parts(_list, n):
-            for idx in range(0, len(_list), n):
-                yield _list[idx:idx + n]
+        titles_coroutine = self._embed_async(
+            texts=[_info["title"] for _info in _infos],
+            session=session,
+            chunking=False,
+        )
+        contents_coroutine = self._embed_async(
+            texts=[_info["content"] for _info in _infos],
+            session=session,
+            chunking=True,
+        )
 
-        parted_supports = list(parts(items, interval))
+        embeddings = await asyncio.gather(titles_coroutine, contents_coroutine)
 
-        print(items[0])
-
-        supports: List[SupportDTO] = []
-
-        async def embed_partial_async(_supports: List[SupportDTO]):
-            _supports = [support for support in _supports if "info" in support]
-            _infos = [support["info"] for support in _supports]
-
-            titles_coroutine = self._embed_async(
-                texts=[_info["title"] for _info in _infos],
-                session=session,
-                chunking=False,
-            )
-            contents_coroutine = self._embed_async(
-                texts=[_info["content"] for _info in _infos],
-                session=session,
-                chunking=True,
-            )
-
-            embeddings = await asyncio.gather(titles_coroutine, contents_coroutine)
-
-            return [
-                SupportDTO(
-                    **support,
-                    **{"embeddings": {
+        return [
+            SupportDTO(
+                **support, **{
+                    "embeddings": {
                         "title_embeddings": title_vector,
                         "content_embeddings": content_vector,
-                    }}
-                ) for support, title_vector, content_vector in zip(_supports, embeddings[0], embeddings[1])
-            ]
-
-        for _supports in parted_supports:
-            supports += await embed_partial_async(_supports)
-
-        return supports
+                    }
+                }
+            ) for support, title_vector, content_vector in
+            zip(_supports, embeddings[0], embeddings[1])
+        ]

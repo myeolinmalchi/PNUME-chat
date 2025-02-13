@@ -1,16 +1,42 @@
-from sqlalchemy import Engine, create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import Engine, Integer, MetaData, create_engine
+from sqlalchemy.orm import Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy.ext.declarative import as_declarative
 from contextvars import ContextVar
 from dotenv import load_dotenv
 
 load_dotenv()
 
 import os
-from sqlalchemy.orm import declarative_base
 
 N_DIM, V_DIM = (1024, 250002)
 
-Base = declarative_base()
+metadata = MetaData()
+
+
+@as_declarative(metadata=metadata)
+class Base:
+    metadata: MetaData
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    def keys(self):
+        return self.__dict__.keys()
+
+    def items(self):
+        return self.__dict__.items()
+
+    def values(self):
+        return self.__dict__.values()
+
+    def __getitem__(self, key: str):
+        return self.__dict__[key]
+
+    def __setitem__(self, key: str, value):
+        setattr(self, key, value)
+
 
 session_context_var: ContextVar = ContextVar("db_session", default=None)
 

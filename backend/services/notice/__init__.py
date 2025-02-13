@@ -5,6 +5,7 @@ from .crawler import *
 
 
 def create_notice_service(_type: Literal["default", "me"] = "default"):
+    semester_repo = SemesterRepository()
     notice_repo = NoticeRepository()
     notice_embedder = NoticeEmbedder()
     univ_repo = UniversityRepository()
@@ -20,7 +21,8 @@ def create_notice_service(_type: Literal["default", "me"] = "default"):
         notice_repo=notice_repo,
         notice_embedder=notice_embedder,
         notice_crawler=notice_crawler,
-        university_repo=univ_repo
+        university_repo=univ_repo,
+        semester_repo=semester_repo
     )
 
     return notice_service

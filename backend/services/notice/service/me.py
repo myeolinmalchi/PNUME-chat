@@ -39,10 +39,22 @@ class NoticeMEService(NoticeServiceBase):
             })
 
             _urls = urls[st:ed]
-            dtos = [NoticeDTO(url=url, **{"info": {"department": "기계공학부", "category": url_key}}) for url in _urls]
+            dtos = [
+                NoticeDTO(
+                    **{
+                        "url": url,
+                        "info": {
+                            "department": "기계공학부",
+                            "category": url_key
+                        }
+                    }
+                ) for url in _urls
+            ]
             notices = await self.notice_crawler.scrape_detail_async(dtos)
             if kwargs.get('with_embeddings', True):
-                notices = await self.notice_embedder.embed_all_async(items=notices, interval=interval)
+                notices = await self.notice_embedder.embed_dtos_batch_async(
+                    items=notices, batch_size=interval
+                )
 
             notice_models = [self.dto2orm(n) for n in notices]
             notice_models = [n for n in notice_models if n]

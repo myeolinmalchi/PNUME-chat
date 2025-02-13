@@ -1,4 +1,4 @@
-from typing import TypedDict, List
+from typing import Required, TypedDict, List
 
 from services.base import EmbedResult
 from services.base.dto import BaseDTO
@@ -25,7 +25,7 @@ class NoticeEmbeddingsDTO(TypedDict):
     content_embeddings: List[EmbedResult]
 
 
-class NoticeDTO(BaseDTO):
-    info: NoticeInfoDTO
+class NoticeDTO(BaseDTO, total=False):
+    info: Required[NoticeInfoDTO]
     attachments: List[AttachmentDTO]
     embeddings: NoticeEmbeddingsDTO

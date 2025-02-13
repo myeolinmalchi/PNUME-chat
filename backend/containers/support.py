@@ -3,6 +3,7 @@ from dependency_injector import containers, providers
 import db.repositories as repo
 from services import support
 
+
 class SupportContainer(containers.DeclarativeContainer):
 
     support_repo = providers.Singleton(repo.SupportRepository)
@@ -11,7 +12,7 @@ class SupportContainer(containers.DeclarativeContainer):
 
     support_service = providers.Factory(
         support.SupportService,
-        support_repo = support_repo,
-        support_embedder = support_embedder,
-        support_crawler = support_crawler
+        support_repo=support_repo,
+        support_embedder=support_embedder,
+        support_crawler=support_crawler
     )

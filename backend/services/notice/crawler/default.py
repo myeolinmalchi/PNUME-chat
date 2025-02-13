@@ -25,57 +25,50 @@ SELECTORs = {
 
 class NoticeCrawler(NoticeCrawlerBase):
 
+    def compare_path(self, path: str, last_id: int | None):
+        if not last_id:
+            return True
+
+        ss = path.split('/')[4]
+        return int(ss) > int(last_id)
+
     def scrape_urls(self, **kwargs) -> List[str]:
         """공지 리스트에서 각 게시글 url 추출"""
 
         url = kwargs.get("url")
         if not url:
             raise ValueError("'url' must be contained")
+        _url = parse_url(url)
 
         rows = kwargs.get("rows", 500)
 
         _url_str = f"{url}?row={rows}"
+        print(_url_str)
 
-        soup, paths = None, None
-
-        is_success = lambda s: self._check_table_exists(s)
-        soup = self._scrape(_url_str, is_success=is_success)
-        paths = self._parse_paths(soup)
-
-        if not paths:
-            raise ClientError("공지사항 리스트를 불러오지 못했습니다.")
-
-        _url = parse_url(url)
-
-        urls = [f"{_url.scheme}://{_url.netloc}{path}" for path in paths]
-        last_url = kwargs.get("last_url")
-
-        if last_url:
-            compare_url = lambda url: len(url) == len(last_url) and url > last_url
-            filtered_urls = [url for url in urls if compare_url(url)]
-
-            if len(filtered_urls) < len(urls):
-                return filtered_urls
-
+        soup = self._scrape(_url_str, is_success=self._check_table_exists)
         tot_pages = self._get_page_num(soup)
+        last_id: int | None = kwargs.get("last_id")
+        urls: List[str] = []
 
-        for page in range(1, tot_pages):
-            _url_str = f"{url}?row={rows}&page={page + 1}"
+        for page in range(0, tot_pages):
+            if page > 0:
+                _url_str = f"{url}?row={rows}&page={page + 1}"
+                soup = self._scrape(
+                    _url_str, is_success=self._check_table_exists
+                )
 
-            soup = self._scrape(_url_str, is_success=is_success)
             paths = self._parse_paths(soup)
-
-            _urls = [f"{_url.scheme}://{_url.netloc}{path}" for path in paths]
-
-            if last_url:
-                compare_url = lambda url: len(url) == len(last_url) and url > last_url
-                filtered_urls = [url for url in urls if compare_url(url)]
-
-                if len(filtered_urls) < len(urls):
-                    urls += filtered_urls
-                    return urls
+            filtered = [
+                path for path in paths if self.compare_path(path, last_id)
+            ]
+            _urls = [
+                f"{_url.scheme}://{_url.netloc}{path}" for path in filtered
+            ]
 
             urls += _urls
+
+            if len(paths) > len(filtered):
+                return urls
 
         return urls
 
@@ -158,7 +151,13 @@ class NoticeCrawler(NoticeCrawlerBase):
                 "url": self._preprocess_text(str(anchor["href"])),
             })
 
-        _info = {**_info, **dto["info"]}
-        _dto = {**dto, "info": _info, "attachments": _attachments}
+        _info = {
+            **_info,
+            **dto["info"]
+        }
+        _dto = {
+            **dto, "info": _info,
+            "attachments": _attachments
+        }
 
         return NoticeDTO(**_dto)

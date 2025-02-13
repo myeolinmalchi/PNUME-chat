@@ -1,4 +1,4 @@
-from .notice import *
-from .professor import *
+from .calendar import *
 from .support import *
+from .notice import *
 from .app import *
