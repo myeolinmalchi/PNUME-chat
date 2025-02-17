@@ -18,6 +18,7 @@ from services.calendar.service import CalendarService
 from db.models.notice import NoticeModel
 from db.models.support import SupportModel
 from db.models.professor import ProfessorModel
+from services.base.types.calendar import SemesterType
 
 ## 의존성 주입 테스트
 """from services import notice, support, calendar, professor
@@ -193,7 +194,7 @@ async def function_calling(question: str) -> str:
 
     tools = TOOLS
     prompt: str = prompt
-    ## 초기 메시지 정의
+
     messages: List = [
         {
             "role": "system",
@@ -265,11 +266,22 @@ async def function_calling(question: str) -> str:
                             "content": f"{notices_info_str}"
                         }
                     })
-                # TODO 
+                
                 elif function_name == "search_calendar":
                     calendar_search_result =  await search_calendar(**function_args)
+                    calendars_info: List[Dict] = []
+                    for calendar in calendar_search_result:
+                        calendar_info = (
+                            f"기간: {calendar.period}\n"
+                            f"학사일정: {calendar.description}\n"
+                        )
+                        calendars_info.append(calendar_info)
+                    calendar_info_str = "\n\n".join(calendars_info)
+                    messages.append({
+                        "role": "function",
+                        "content": f"{calendar_info_str}"
+                    })
                     
-
                 elif function_name == "search_professor":
                     professor_search_result =  await search_professor(**function_args)
                     professors_info = []
@@ -292,9 +304,11 @@ async def function_calling(question: str) -> str:
                 else:
                     raise HTTPException(status_code=400, detail="Unknown function called")
             else:
-                # 함수 호출이 없고 일반 응답일 경우
-                messages.append()
                 answer = choice["message"]["content"]
+                messages.append({
+                    "role": "assistant",
+                    "content": answer
+                })
                 return choice["message"]["content"] ##여기서 최종 답변 생성하고 리턴되는거임 !!
 
         except Exception as e:
@@ -316,14 +330,18 @@ async def search_notices(query: str) -> List[Tuple[NoticeModel, float]]:
     search_result = notice_service.search_notices_with_filter(query=query)
 
     return search_result
-    
 
-async def search_calendar(year: int, type_: str):
+## 날짜와 학사 일정에 대한 질문을 받으면 그걸 토대로 학기 데이터를 추출해서 이를 semestertype객체로서 전달
+## semetsetertype객체를 이용해서 calendar table에서 
+async def search_calendar(query: str, semesters: List[SemesterType]):
+# 학사일정 searching function
     semester_repo = SemesterRepository()
     calendar_repo = CalendarRepository()
     calendar_service = CalendarService(semester_repo=semester_repo, calendar_repo=calendar_repo)
 
-    search_result = calendar_service
+    search_result = calendar_service.get_calendars(semesters=semesters)
+    
+    return search_result
 
 async def search_professor(query: str) -> List[Tuple[ProfessorModel, float]]:
     professor_service = create_professor_service()

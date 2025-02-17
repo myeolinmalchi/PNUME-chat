@@ -1,50 +1,28 @@
-from fastapi import APIRouter, Depends
-from dependency_injector.wiring import inject, Provide
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
-import containers as co
-
-from services import notice, support, calendar
-from services.base.types.calendar import SemesterType
+from .function_call import function_calling
 
 router = APIRouter()
 
+# 질문을 담을 Pydantic 모델 정의
+class QuestionRequest(BaseModel):
+    question: str
 
-class TestRequestBody(BaseModel):
-    input: str
-    department: str
+# 답변을 담을 Pydantic 모델 정의
+class AnswerResponse(BaseModel):
+    answer: str
 
+@router.post("/question", response_model=AnswerResponse)
+async def ask_chatbot(question_request: QuestionRequest):
+    question = question_request.question
 
-@router.post("/chat")
-@inject
-async def chat(
-    req: TestRequestBody,
-    notice_service: notice.NoticeServiceBase = Depends(
-        Provide[co.AppContainer.notice.notice_service]
-    ),
-    support_service: support.SupportService = Depends(
-        Provide[co.AppContainer.support.provided.support_service]
-    ),
-    calendar_service: calendar.CalendarService = Depends(
-        Provide[co.AppContainer.calendar.provided.calendar_service]
-    ),
-):
+    try:
+        # OpenAI function calling 함수 호출
+        answer = await function_calling(question)
+        return AnswerResponse(answer=answer)
 
-    notices = notice_service.search_notices_with_filter(
-        query=req.input,
-        semesters=[
-            SemesterType(year=2024, type_="겨울방학"),
-            SemesterType(year=2024, type_="2학기"),
-            SemesterType(year=2024, type_="1학기")
-        ],
-        count=5,
-        departments=[req.department]
-    )
+    except HTTPException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
 
-    results = [{
-        "title": _result.title,
-        "url": _result.url,
-        "date": _result.date,
-    } for _result, _ in notices]
-
-    return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error occurred: {str(e)}")
