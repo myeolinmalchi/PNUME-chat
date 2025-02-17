@@ -39,10 +39,7 @@ class NoticeRepository(BaseRepository[NoticeModel]):
                     ed_date = _range["ed_date"]
 
                     date_filters.append(
-                        and_(
-                            NoticeModel.date >= st_date, NoticeModel.date
-                            <= ed_date
-                        )
+                        and_(NoticeModel.date >= st_date, NoticeModel.date <= ed_date)
                     )
 
                 if len(date_filters) == 1:
@@ -61,13 +58,14 @@ class NoticeRepository(BaseRepository[NoticeModel]):
                 dp_ids = list(map(lambda d: d.id, dp))
                 filters.append(NoticeModel.department_id.in_(dp_ids))
 
+        if "categories" in kwargs:
+            categories = kwargs["categories"]
+            filters.append(NoticeModel.category.in_(categories))
+
         return and_(*filters)
 
     def update_semester(
-        self,
-        semester: SemesterModel,
-        batch: Optional[int] = None,
-        offset: Optional[int] = None
+        self, semester: SemesterModel, batch: Optional[int] = None, offset: Optional[int] = None
     ):
         st, ed = semester.st_date, semester.ed_date
         date_filter = and_(NoticeModel.date >= st, NoticeModel.date <= ed)
@@ -94,15 +92,17 @@ class NoticeRepository(BaseRepository[NoticeModel]):
     def find_last_notice(self, **kwargs: Unpack[NoticeSearchFilterType]):
         filter = self._get_filters(**kwargs)
 
-        notice_id = cast(func.split_part(NoticeModel.url, '/', 7),
-                         Integer).label("notice_id")
+        notice_id = cast(func.split_part(NoticeModel.url, '/', 7), Integer).label("notice_id")
 
         last_notice = self.session.query(NoticeModel,
-                                         notice_id).where(filter).order_by(
-                                             desc(notice_id)
-                                         ).first()
+                                         notice_id).where(filter).order_by(desc(notice_id)).first()
 
         return last_notice[0] if last_notice else None
+
+    def delete_all(self, **kwargs: Unpack[NoticeSearchFilterType]):
+        filter = self._get_filters(**kwargs)
+        affected = self.session.query(NoticeModel).filter(filter).delete()
+        return affected
 
     def delete_by_department(self, department: str):
         department_model = self.session.query(DepartmentModel).filter(
@@ -127,15 +127,11 @@ class NoticeRepository(BaseRepository[NoticeModel]):
         """제목으로 유사도 검색"""
         score_dense = 1 - NoticeModel.title_vector.cosine_distance(dense_vector)
         score_lexical = -1 * (
-            NoticeModel.title_sparse_vector.max_inner_product(
-                SparseVector(sparse_vector, V_DIM)
-            )
+            NoticeModel.title_sparse_vector.max_inner_product(SparseVector(sparse_vector, V_DIM))
         )
-        score = ((score_lexical * lexical_ratio) + score_dense *
-                 (1 - lexical_ratio)).label("score")
+        score = ((score_lexical * lexical_ratio) + score_dense * (1 - lexical_ratio)).label("score")
 
-        query = self.session.query(NoticeModel,
-                                   score).order_by(score.desc()).limit(k)
+        query = self.session.query(NoticeModel, score).order_by(score.desc()).limit(k)
 
         return query.all()
 
@@ -147,9 +143,7 @@ class NoticeRepository(BaseRepository[NoticeModel]):
         k: int = 5,
     ) -> List[NoticeModel]:
         """내용으로 유사도 검색"""
-        score_dense = 1 - NoticeChunkModel.chunk_vector.cosine_distance(
-            query_vector
-        )
+        score_dense = 1 - NoticeChunkModel.chunk_vector.cosine_distance(query_vector)
         score_lexical = -1 * (
             NoticeChunkModel.chunk_sparse_vector.max_inner_product(
                 SparseVector(query_sparse_vector, V_DIM)
@@ -179,60 +173,46 @@ class NoticeRepository(BaseRepository[NoticeModel]):
 
         filter = self._get_filters(**kwargs)
 
-        score_dense_content = 1 - NoticeChunkModel.chunk_vector.cosine_distance(
-            dense_vector
-        )
+        score_dense_content = 1 - NoticeChunkModel.chunk_vector.cosine_distance(dense_vector)
         score_lexical_title = -1 * (
             NoticeChunkModel.chunk_sparse_vector.max_inner_product(
                 SparseVector(sparse_vector, V_DIM)
             )
         )
-        score_content = func.max((score_lexical_title * lexical_ratio) +
-                                 score_dense_content *
+        score_content = func.max((score_lexical_title * lexical_ratio) + score_dense_content *
                                  (1 - lexical_ratio)).label("score_content")
 
         rank_content = (
             self.session.query(
                 NoticeModel.id,
-                func.row_number().over(order_by=score_content.desc()
-                                       ).label("rank_content"),
-            ).join(
-                NoticeChunkModel, NoticeModel.id == NoticeChunkModel.notice_id
-            ).group_by(NoticeModel.id
-                       ).filter(filter).order_by(score_content.desc()
-                                                 ).subquery()
+                func.row_number().over(order_by=score_content.desc()).label("rank_content"),
+            ).join(NoticeChunkModel, NoticeModel.id == NoticeChunkModel.notice_id).group_by(
+                NoticeModel.id
+            ).filter(filter).order_by(score_content.desc()).subquery()
         )
 
-        score_dense_title = 1 - NoticeModel.title_vector.cosine_distance(
-            dense_vector
-        )
+        score_dense_title = 1 - NoticeModel.title_vector.cosine_distance(dense_vector)
         score_lexical_title = -1 * (
-            NoticeModel.title_sparse_vector.max_inner_product(
-                SparseVector(sparse_vector, V_DIM)
-            )
+            NoticeModel.title_sparse_vector.max_inner_product(SparseVector(sparse_vector, V_DIM))
         )
-        score_title = ((score_lexical_title * lexical_ratio) +
-                       score_dense_title *
+        score_title = ((score_lexical_title * lexical_ratio) + score_dense_title *
                        (1 - lexical_ratio)).label("score_title")
 
         rank_title = self.session.query(
             NoticeModel.id,
-            func.row_number().over(order_by=score_title.desc()
-                                   ).label("rank_title"),
+            func.row_number().over(order_by=score_title.desc()).label("rank_title"),
         ).filter(filter).subquery()
 
         rrf_score = (
-            1 / (rrf_k + rank_content.c.rank_content) + 1 /
-            (rrf_k + rank_title.c.rank_title)
+            1 / (rrf_k + rank_content.c.rank_content) + 1 / (rrf_k + rank_title.c.rank_title)
         ).label("rrf_score")
 
         query = (
-            self.session.query(NoticeModel, rrf_score).join(
-                rank_content, NoticeModel.id == rank_content.c.id
-            ).join(rank_title,
-                   NoticeModel.id == rank_title.c.id).filter(filter).order_by(
-                       rrf_score.desc()
-                   ).limit(k)
+            self.session.query(NoticeModel).join(rank_content,
+                                                 NoticeModel.id == rank_content.c.id).join(
+                                                     rank_title, NoticeModel.id == rank_title.c.id
+                                                 ).filter(filter).order_by(rrf_score.desc()
+                                                                           ).limit(k)
         )
 
         return query.all()

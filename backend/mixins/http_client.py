@@ -1,9 +1,8 @@
-from abc import ABC, ABCMeta
+from abc import ABCMeta
 from functools import wraps
 from typing import Callable, Dict, Any
 
 import aiohttp
-from inspect import signature
 import logging
 from mixins.asyncio import semaphore
 
@@ -41,7 +40,6 @@ def session_wrapper(func):
     @wraps(func)
     async def wrapped(*args, **kwargs):
         async with semaphore():
-            #sig = signature(func)
             if 'session' not in kwargs or kwargs['session'] is None:
                 timeout = aiohttp.ClientTimeout(total=60)
                 async with aiohttp.ClientSession(timeout=timeout) as sess:

@@ -20,5 +20,5 @@ class BaseService(Generic[DTO, ORM]):
     def orm2dto(self, orm: ORM) -> DTO:
         raise NotImplementedError()
 
-    async def run_full_crawling_pipeline_async(self, **kwargs) -> List[ORM]:
         raise NotImplementedError()
+    async def run_crawling_pipeline(self, **kwargs) -> List[DTO]:
