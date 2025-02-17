@@ -2,8 +2,9 @@ from contextlib import contextmanager
 from functools import wraps
 import logging
 from typing import Callable, Dict, Generic, Tuple, Type, TypeVar, Any, List
-from sqlalchemy.orm import Session
-from db.common import get_session, session_context_var
+from sqlalchemy.orm import Query, Session
+from db.common import Base, get_session, session_context_var
+from abc import abstractmethod
 
 logger = logging.getLogger(__name__)
 
@@ -28,19 +29,13 @@ class TransactionalMetaclass(type):
     @classmethod
     def apply_transactional_wrapper(cls, attrs: Dict[str, Any]) -> None:
         transactional_prefixes = (
-            "find",
-            "search",
-            "get",
-            "create",
-            "update",
-            "delete",
+            "find", "search", "get", "create", "update", "delete", "upsert"
         )
 
         for attr_name, attr_value in attrs.items():
-            if callable(attr_value) and any(
-                attr_name.startswith(prefix)
-                for prefix in transactional_prefixes
-            ):
+            if callable(attr_value) and any(attr_name.startswith(prefix)
+                                            for prefix in transactional_prefixes
+                                            ):
                 attrs[attr_name] = cls.add_transactional(attr_value)
 
     @staticmethod
@@ -64,7 +59,7 @@ class TransactionalMetaclass(type):
                     new_class.model = model_type
 
 
-ModelType = TypeVar("ModelType")
+ModelType = TypeVar("ModelType", bound=Base)
 
 
 class BaseRepository(Generic[ModelType], metaclass=TransactionalMetaclass):
@@ -100,6 +95,30 @@ class BaseRepository(Generic[ModelType], metaclass=TransactionalMetaclass):
             logger.error(f"Error during expunge_all: {str(e)}")
             raise
 
+    def upsert(
+        self,
+        new: ModelType,
+        query: Query[ModelType],
+        columns: List[str] = []
+    ) -> ModelType:
+        prev = query.one_or_none()
+        if prev is None:
+            self.session.add(new)
+            return new
+
+        columns = [col for col in columns if col in new.keys()]
+        for col in columns:
+            value = getattr(new, col)
+            setattr(prev, col, value)
+
+        self.session.flush()
+
+        return prev
+
+    @abstractmethod
+    def upsert_all(self, objects: List[ModelType]) -> List[ModelType]:
+        pass
+
     def update(self, instance: ModelType, data: Dict[str, Any]) -> ModelType:
         for key, value in data.items():
             if hasattr(instance, key):
@@ -132,30 +151,33 @@ def transaction():
 
     # Check if there's already an active transaction
     is_nested = session.in_transaction()
-
+    savepoint = session.begin_nested() if is_nested else None
     try:
         if is_nested:
-            savepoint = session.begin_nested()
+            assert savepoint
             logger.debug("Starting nested transaction")
+
             yield savepoint
+
+            savepoint.commit()
+            logger.debug("Savepoint committed")
         else:
             # Start a new transaction
             session.begin()
             logger.debug("Starting new transaction")
+
             yield session
 
-        if is_nested:
-            savepoint.commit()
-            logger.debug("Savepoint committed")
-        else:
             session.commit()
             session.close()
             logger.debug("Transaction committed")
+
     except Exception as e:
         logger.exception(
             "Exception occurred during transaction, rolling back", exc_info=e
         )
         if is_nested:
+            assert savepoint
             savepoint.rollback()
             logger.debug("Savepoint rolled back")
         else:

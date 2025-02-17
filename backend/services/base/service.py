@@ -12,16 +12,13 @@ class CrawlingParams(TypedDict):
     with_embeddings: NotRequired[bool]
 
 
-class BaseService(Generic[DTO, ORM], ABC):
+class BaseService(Generic[DTO, ORM]):
 
-    @abstractmethod
     def dto2orm(self, dto: DTO) -> ORM:
-        pass
+        raise NotImplementedError()
 
-    @abstractmethod
     def orm2dto(self, orm: ORM) -> DTO:
-        pass
+        raise NotImplementedError()
 
-    @abstractmethod
-    async def run_full_crawling_pipeline_async(self, **kwargs) -> List[ORM]:
-        pass
+        raise NotImplementedError()
+    async def run_crawling_pipeline(self, **kwargs) -> List[DTO]:

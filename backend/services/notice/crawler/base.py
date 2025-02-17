@@ -7,5 +7,5 @@ from services.notice.dto import NoticeDTO
 class NoticeCrawlerBase(BaseCrawler[NoticeDTO]):
 
     @abstractmethod
-    def scrape_urls(self, **kwargs) -> List[str]:
+    async def scrape_urls_async(self, **kwargs) -> List[str]:
         pass

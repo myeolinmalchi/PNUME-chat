@@ -1,84 +1,76 @@
-from abc import abstractmethod
-from typing import Dict, Generic, List, NotRequired, Optional, TypeVar, TypedDict
+from abc import ABC, abstractmethod
+from typing import Generic, List, Optional
 
 from aiohttp import ClientSession
 import requests
 
-from mixins.asyncio import retry_async
+from mixins.asyncio import retry_async, retry_sync
 from mixins.http_client import HTTPMetaclass
 from dotenv import load_dotenv
 import os
+
+from services.base.dto import DTO, EmbedResult
 
 load_dotenv()
 
 EMBED_URL = os.environ.get("EMBED_URL")
 
 
-class EmbedResult(TypedDict):
-    chunk: NotRequired[str]
-    dense: List[float]
-    sparse: Dict[int, float]
+@retry_async(delay=3)
+async def embed_async(
+    texts: str | List[str],
+    session: ClientSession,
+    chunking: bool = True,
+    truncate: bool = True,
+) -> EmbedResult | List[EmbedResult]:
+    body = {"inputs": texts, "chunking": chunking, "truncate": truncate}
+    async with session.post(f"{EMBED_URL}/embed", json=body) as res:
+        if res.status == 200:
+            data = await res.json()
+            return data
+
+        raise Exception("텍스트 임베딩에 실패했습니다.")
 
 
-DTO = TypeVar("DTO")
+@retry_sync(delay=3)
+def embed(texts: str | List[str], chunking: bool = True, truncate: bool = True):
+    body = {"inputs": texts, "chunking": chunking, "truncate": truncate}
+    res = requests.post(f"{EMBED_URL}/embed", json=body)
+    if res.status_code == 200:
+        return res.json()
+
+    raise Exception
 
 
-class BaseEmbedder(Generic[DTO], metaclass=HTTPMetaclass):
+class BaseEmbedder(ABC, Generic[DTO], metaclass=HTTPMetaclass):
 
-    async def embed_dto_async(
-        self, item: DTO, session: Optional[ClientSession] = None
-    ) -> DTO:
-        if session is None:
-            raise ValueError("parameter 'session' cannot be None.")
+    async def embed_dtos_async(
+        self, dtos: List[DTO], session: Optional[ClientSession] = None, **kwargs
+    ) -> List[DTO]:
+        if not session or type(session) is not ClientSession:
+            raise ValueError("'session' argument must be provided.")
 
-        return await self._embed_dto_async(item, session=session)
+        return await self._embed_dtos_async(dtos, session=session, **kwargs)
 
     @abstractmethod
-    async def _embed_dto_async(self, item: DTO, session: ClientSession) -> DTO:
+    async def _embed_dtos_async(self, dtos: List[DTO], session: ClientSession,
+                                **kwargs) -> List[DTO]:
         pass
 
-    async def embed_all_async(
-        self,
-        items: List[DTO],
-        interval: int = 30,
-        session: Optional[ClientSession] = None,
-    ) -> List[DTO]:
-        if session is None:
-            raise ValueError("parameter 'session' cannot be None.")
+    async def embed_dtos_batch_async(self,
+                                     dtos: List[DTO],
+                                     batch_size: int = 30,
+                                     **kwargs) -> List[DTO]:
+        session = kwargs.get("session")
+        if isinstance(session, ClientSession):
+            raise ValueError("'session' argument must be provided.")
 
-        return await self._embed_all_async(items, interval, session=session)
+        def parts(_list: List[DTO], n):
+            for idx in range(0, len(_list), n):
+                yield _list[idx:idx + n]
 
-    @abstractmethod
-    async def _embed_all_async(
-        self, items: List[DTO], interval: int, session: ClientSession
-    ) -> List[DTO]:
-        pass
+        parted_items = list(parts(dtos, batch_size))
 
-    @retry_async(delay=3)
-    async def _embed_async(
-        self,
-        texts: str | List[str],
-        session: ClientSession,
-        chunking: bool = True,
-        truncate: bool = True,
-    ) -> EmbedResult | List[EmbedResult]:
-        body = {"inputs": texts, "chunking": chunking, "truncate": truncate}
-        async with session.post(f"{EMBED_URL}/embed", json=body) as res:
-            if res.status == 200:
-                data = await res.json()
-                return data
+        xss = [await self.embed_dtos_async(_items, session=session) for _items in parted_items]
 
-            raise Exception("텍스트 임베딩에 실패했습니다.")
-
-    def _embed_query(
-        self,
-        query: str | List[str],
-        chunking: bool = True,
-        truncate: bool = True
-    ):
-        body = {"inputs": query, "chunking": chunking, "truncate": truncate}
-        res = requests.post(f"{EMBED_URL}/embed", json=body)
-        if res.status_code == 200:
-            return res.json()
-
-        raise Exception
+        return [x for xs in xss for x in xs]
