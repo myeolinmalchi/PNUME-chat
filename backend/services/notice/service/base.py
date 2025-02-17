@@ -29,7 +29,7 @@ class SearchOptions(TypedDict, total=False):
     departments: Required[List[str]]
 
 
-class NoticeServiceBase(BaseService):
+class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
 
     def __init__(
         self,
