@@ -116,10 +116,8 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
         """
 
     @transaction()
-    def search_notices_with_filter(
-        self, query: str, **opts: Unpack[SearchOptions]
-    ):
-        embed_result = self.notice_embedder._embed_query(query, chunking=False)
+    def search_notices_with_filter(self, query: str, **opts: Unpack[SearchOptions]):
+        embed_result = embed(query, chunking=False)
 
         semesters = opts['semesters']
         departments = opts['departments']
@@ -145,7 +143,7 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
             k=opts.get("count", 5),
         )
 
-        return search_results
+        return [self.orm2dto(orm) for orm in search_results]
 
     @transaction()
     def add_semester_info(self, semester: SemesterType, batch_size: int = 500):
