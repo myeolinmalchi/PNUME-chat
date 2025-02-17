@@ -1,18 +1,15 @@
 import json
-import logging
 from time import time
 from typing import List
 
-from openai.types.chat import ChatCompletionMessageParam, ChatCompletionToolParam
+from openai.types.chat import ChatCompletionToolParam
 from openai.types.chat_model import ChatModel
 from db.repositories.calendar import CalendarRepository, SemesterRepository
-from services.calendar.service import CalendarService
+from services.university.service import CalendarService
 from services.support import create_support_service
 from services.notice import create_notice_service
 
 from openai import OpenAI
-from pydantic import BaseModel
-
 from config.logger import _logger
 
 logger = _logger(__name__)
