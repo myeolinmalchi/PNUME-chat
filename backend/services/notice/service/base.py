@@ -146,35 +146,27 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
         return [self.orm2dto(orm) for orm in search_results]
 
     @transaction()
-    def add_semester_info(self, semester: SemesterType, batch_size: int = 500):
+    def add_semester_info(self, semesters: List[SemesterType], batch_size: int = 500):
 
         if not self.semester_repo:
             raise ValueError("'semester_repo' not provided")
 
-        semester_model = self.semester_repo.search_semesters(semester)
+        semester_models = self.semester_repo.search_semesters(semesters)
+        assert isinstance(semester_models, list)
 
-        if not semester_model:
-            raise ValueError(f"semester info not exists: {semester}")
+        affected = 0
+        for semester_model in semester_models:
+            st, ed = semester_model.st_date, semester_model.ed_date
+            date_range = DateRangeType(st_date=st, ed_date=ed)
+            total_records = self.notice_repo.search_total_records(date_ranges=[date_range])
 
-        assert type(semester_model) is SemesterModel
-
-        st, ed = semester_model.st_date, semester_model.ed_date
-        date_range = DateRangeType(st_date=st, ed_date=ed)
-        total_records = self.notice_repo.search_total_records(
-            date_ranges=[date_range]
-        )
-
-        done = []
-
-        from tqdm import tqdm
-        pbar = tqdm(
-            range(0, total_records, batch_size),
-            desc=f"학기 정보 추가({semester['year']}-{semester['type_']})"
-        )
-        for offset in pbar:
-            notices = self.notice_repo.update_semester(
-                semester_model, batch_size, offset
+            from tqdm import tqdm
+            pbar = tqdm(
+                range(0, total_records, batch_size),
+                desc=f"학기 정보 추가({semester_model.year}-{semester_model.type_})"
             )
-            done += notices
+            for offset in pbar:
+                notices = self.notice_repo.update_semester(semester_model, batch_size, offset)
+                affected += len(notices)
 
-        return done
+        return affected
