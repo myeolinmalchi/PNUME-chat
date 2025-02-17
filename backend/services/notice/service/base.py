@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import logging
 from typing import List, NotRequired, Optional, Required, TypedDict, Unpack
 from pgvector.sqlalchemy import SparseVector
@@ -14,6 +13,7 @@ from db.repositories.calendar import SemesterRepository
 from db.repositories.university import UniversityRepository
 from services.base import BaseService
 
+from services.base.embedder import embed
 from services.base.types.calendar import DateRangeType, SemesterType
 from services.notice.dto import NoticeDTO
 from services.notice.embedder import NoticeEmbedder
@@ -58,17 +58,13 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
     def _parse_embeddings(self, dto):
         embeddings = dto.get("embeddings")
         return {
-            "title_sparse_vector": SparseVector(
-                embeddings["title_embeddings"]["sparse"], V_DIM
-            ),
+            "title_sparse_vector": SparseVector(embeddings["title_embeddings"]["sparse"], V_DIM),
             "title_vector": embeddings["title_embeddings"]["dense"],
             "content_chunks": [
                 NoticeChunkModel(
                     chunk_content=content_vector["chunk"],
                     chunk_vector=content_vector["dense"],
-                    chunk_sparse_vector=SparseVector(
-                        content_vector["sparse"], V_DIM
-                    ),
+                    chunk_sparse_vector=SparseVector(content_vector["sparse"], V_DIM),
                 ) for content_vector in embeddings["content_embeddings"]
             ]
         } if embeddings else {}
@@ -81,18 +77,12 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
         if not info:
             return None
 
-        department_model = self.university_repo.find_department_by_name(
-            info["department"]
-        )
+        department_model = self.university_repo.find_department_by_name(info["department"])
         assert type(department_model) is DepartmentModel
         del info["department"]
 
         return NoticeModel(
-            **info,
-            **attachments,
-            **embeddings,
-            url=dto["url"],
-            department_id=department_model.id
+            **info, **attachments, **embeddings, url=dto["url"], department_id=department_model.id
         )
 
     def orm2dto(self, orm: NoticeModel) -> NoticeDTO:
