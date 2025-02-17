@@ -5,8 +5,9 @@ from functools import wraps
 from typing import Callable, Optional
 import time
 import logging
+from config.logger import _logger
 
-logger = logging.getLogger(__name__)
+logger = _logger(__name__)
 
 _Semaphore: Optional[Semaphore] = None
 
@@ -25,8 +26,8 @@ async def semaphore(limit: int = 4):
             yield
 
     except Exception as e:
-        logger.exception(f"비동기 작업 중 오류가 발생했습니다. ({e})")
-        raise
+        logger(f"비동기 작업 중 오류가 발생했습니다. ({e})", level=logging.ERROR)
+        raise e
 
 
 def retry_async(times: int = 10, delay: float = 1.0, is_success=lambda _: True):
@@ -40,11 +41,12 @@ def retry_async(times: int = 10, delay: float = 1.0, is_success=lambda _: True):
                     result = await func(*args, **kwargs)
                     if not is_success(result):
                         continue
-
+                    if isinstance(result, BaseException):
+                        raise result
                     return result
-                except Exception:
+                except Exception as e:
+                    #logger(f"요청을 재시도 합니다: {e}", level=logging.WARNING)
                     await asyncio.sleep(delay)
-
             raise TimeoutError(f'{times}번의 재시도에 실패했습니다.')
 
         return wrapped
@@ -52,9 +54,7 @@ def retry_async(times: int = 10, delay: float = 1.0, is_success=lambda _: True):
     return decorator
 
 
-def retry_sync(
-    times: int = 10, delay: float = 1.0, is_success: Callable = lambda _: True
-):
+def retry_sync(times: int = 10, delay: float = 1.0, is_success: Callable = lambda _: True):
 
     def decorator(func):
 
