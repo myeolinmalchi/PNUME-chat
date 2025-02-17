@@ -1,27 +1,28 @@
 import asyncio
 
 from services.base import BaseEmbedder
+from services.base.embedder import embed_async
 from services.notice import NoticeDTO
 
 
 class NoticeEmbedder(BaseEmbedder[NoticeDTO]):
 
-    async def _embed_dtos_async(self, items, session):
-        _notices = [notice for notice in items if "info" in notice]
+    async def _embed_dtos_async(self, dtos, session, **kwargs):
+        _notices = [notice for notice in dtos if "info" in notice]
         _infos = [notice["info"] for notice in _notices]
 
-        titles_coroutine = self._embed_async(
+        titles_future = embed_async(
             texts=[_info["title"] for _info in _infos],
             session=session,
             chunking=False,
         )
-        contents_coroutine = self._embed_async(
+        contents_future = embed_async(
             texts=[_info["content"] for _info in _infos],
             session=session,
             chunking=True,
         )
 
-        embeddings = await asyncio.gather(titles_coroutine, contents_coroutine)
+        embeddings = await asyncio.gather(titles_future, contents_future)
 
         return [
             NoticeDTO(
@@ -31,6 +32,6 @@ class NoticeEmbedder(BaseEmbedder[NoticeDTO]):
                         "content_embeddings": content_vector,
                     }
                 }
-            ) for notice, title_vector, content_vector in
-            zip(_notices, embeddings[0], embeddings[1])
+            )
+            for notice, title_vector, content_vector in zip(_notices, embeddings[0], embeddings[1])
         ]
