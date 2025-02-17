@@ -86,12 +86,34 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
         )
 
     def orm2dto(self, orm: NoticeModel) -> NoticeDTO:
-        ...
+        attachments = [{"name": att.name, "url": att.url} for att in orm.attachments]
+        info = {
+            "title": orm.title,
+            "content": orm.content,
+            "category": orm.category,
+            "department": orm.department.name,
+            "date": str(orm.date),
+            "author": orm.author
+        }
+        return NoticeDTO(**{"info": info, "attachments": attachments, "url": orm.url})
 
-    @abstractmethod
-    async def run_full_crawling_pipeline_async(self,
-                                               **kwargs) -> List[NoticeModel]:
-        pass
+    def dto2context(self, dto: NoticeDTO) -> str:
+        info = dto["info"]
+
+        return f"""<Notice>
+            <title>{info["title"]}</title>
+            <metadata>
+                <url>{dto["url"]}</url>
+                <date>{info["date"]}</date>
+                <author>{info["author"]}</author>
+                <department>{info["department"]}</department>
+                <category>{info["category"]}</category>
+            </metadata>
+            <content>
+                {info["content"]}
+            </content>
+        </Notice>
+        """
 
     @transaction()
     def search_notices_with_filter(
