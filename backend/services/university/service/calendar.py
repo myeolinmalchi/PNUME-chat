@@ -3,22 +3,23 @@ from db.models.calendar import CalendarModel
 from db.repositories.calendar import CalendarRepository, SemesterRepository
 from services.base.service import BaseService
 from services.base.types.calendar import SemesterType
+from services.university.dto import CalendarDTO
 
 
-class CalendarService(BaseService):
+class CalendarService(BaseService[CalendarDTO, CalendarModel]):
 
     def __init__(self, semester_repo: SemesterRepository, calendar_repo: CalendarRepository):
         self.semester_repo = semester_repo
         self.calendar_repo = calendar_repo
 
     def dto2orm(self, dto):
-        pass
+        return CalendarModel()
 
     def orm2dto(self, orm):
         pass
 
-    async def run_full_crawling_pipeline_async(self, **kwargs) -> List[CalendarModel]:
-        return [CalendarModel()]
+    async def run_crawling_pipeline(self, **kwargs) -> List[CalendarDTO]:
+        raise NotImplementedError()
 
     def get_calendars(self, semesters: List[SemesterType]):
 
