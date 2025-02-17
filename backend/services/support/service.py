@@ -57,7 +57,7 @@ class SupportService(BaseService):
     def orm2dto(self, orm):
         pass
 
-    async def run_full_crawling_pipeline_async(self, **kwargs):
+    async def run_crawling_pipeline(self, **kwargs):
         with open("config/onestop.json", "r") as f:
             url_dict = json.load(f)
 

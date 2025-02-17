@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class NoticeService(NoticeServiceBase):
 
     @transaction()
-    async def run_full_crawling_pipeline_async(self, **kwargs):
+    async def run_crawling_pipeline(self, **kwargs):
         department = kwargs.get("department")
         if not department:
             raise ValueError
