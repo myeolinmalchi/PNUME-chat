@@ -13,14 +13,14 @@ logger = logging.getLogger(__name__)
 
 
 # TODO: 크롤링 로직 수정
-class NoticeMEService(NoticeService, BaseCrawlerService[NoticeDTO, NoticeModel]):
+class NoticeMECrawlerService(NoticeService, BaseCrawlerService[NoticeDTO, NoticeModel]):
 
     def __init__(self, notice_crawler: NoticeMECrawler, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.notice_crawler = notice_crawler
 
     @transaction()
-    async def run_full_crawling_pipeline_async(self, **kwargs):
+    async def run_crawling_pipeline(self, **kwargs):
 
         models = []
 
