@@ -44,25 +44,19 @@ def embed(texts: str | List[str], chunking: bool = True, truncate: bool = True):
 
 class BaseEmbedder(ABC, Generic[DTO], metaclass=HTTPMetaclass):
 
-    async def embed_dtos_async(
-        self, dtos: List[DTO], session: Optional[ClientSession] = None, **kwargs
-    ) -> List[DTO]:
+    async def embed_dtos_async(self, dtos: List[DTO], session: Optional[ClientSession] = None, **kwargs) -> List[DTO]:
         if not session or type(session) is not ClientSession:
             raise ValueError("'session' argument must be provided.")
 
         return await self._embed_dtos_async(dtos, session=session, **kwargs)
 
     @abstractmethod
-    async def _embed_dtos_async(self, dtos: List[DTO], session: ClientSession,
-                                **kwargs) -> List[DTO]:
+    async def _embed_dtos_async(self, dtos: List[DTO], session: ClientSession, **kwargs) -> List[DTO]:
         pass
 
-    async def embed_dtos_batch_async(self,
-                                     dtos: List[DTO],
-                                     batch_size: int = 30,
-                                     **kwargs) -> List[DTO]:
+    async def embed_dtos_batch_async(self, dtos: List[DTO], batch_size: int = 30, **kwargs) -> List[DTO]:
         session = kwargs.get("session")
-        if isinstance(session, ClientSession):
+        if not isinstance(session, ClientSession):
             raise ValueError("'session' argument must be provided.")
 
         def parts(_list: List[DTO], n):
