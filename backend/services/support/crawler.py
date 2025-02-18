@@ -1,62 +1,61 @@
-from services.base.crawler import BaseCrawler
-from markdownify import markdownify as md
+from typing import List
+from bs4 import Tag
+from bs4.element import NavigableString
+from services.base.crawler.crawler import BaseCrawler
 
+from services.notice.dto import AttachmentDTO
 from services.support.dto import SupportDTO
-
-SELECTORs = {"attachments": ".message-body", "info-text": ".info-text", "cards": ".card"}
+from services.base.crawler import preprocess
 
 DOMAIN = "https://onestop.pusan.ac.kr"
 
 
 class SupportCrawler(BaseCrawler):
 
-    def _parse_detail(self, dto, soup):
+    def _parse_detail(self, soup):
         """학지시 상세 내용 파싱"""
 
-        # 첨부파일 파싱
-        att_element = soup.select_one(SELECTORs["attachments"])
-        _attachments = []
-        if att_element:
-            for div in att_element.select("div"):
-                name = self._preprocess_text(div.text)
+        pages = soup.select("div.tab-content > div.tab-pane")
 
-                anchor = div.select_one("a:nth-child(2)")
-                if not anchor or not anchor.has_attr("href"):
-                    continue
+        attachments: List[AttachmentDTO] = []
+        content = ""
 
-                path = self._preprocess_text(str(anchor["href"]))
-                _attachments.append({"name": name, "url": f"{DOMAIN}{path}"})
-
-        # 상세 내용 파싱
-        info_texts = soup.select(SELECTORs["info-text"])
-
-        total_info_text = []
-        for info_text in info_texts:
-            temp = self._preprocess_text(info_text.text)
-            total_info_text.append(temp)
-
-        info_text = " ".join(total_info_text)
-
-        cards = soup.select(SELECTORs["cards"])
-
-        contents = []
-        for card in cards:
-            content = ""
-            header = card.select_one(".card-header > button")
-            if header:
-                content = self._preprocess_text(header.text)
-
-            body = card.select_one(".card-body")
-            if not body:
+        for idx, page in enumerate(pages):
+            nav_element = page.select_one(f"a#tab{idx}")
+            if not nav_element:
                 continue
 
-            body_ = self._preprocess_text(md(body.text))
-            content = content + " " + body_
+            heading = nav_element.get_text(strip=True)
+            heading_element = soup.new_tag(name="h2", string=heading)
 
-            contents.append(content)
+            message_section = page.find("message-box message-body", recursive=False)
+            file_section = page.select_one("#file_tabs2")
+            content_section = page.select_one("accordian")
 
-        content = "\n".join(contents)
-        _info = {**dto["info"], "content": content}
-        _dto = {"info": _info, "attachments": _attachments, "url": dto["url"]}
+            if not content_section:
+                continue
 
-        return SupportDTO(**_dto)
+            if file_section:
+                for e in file_section.select(".my-2"):
+                    anchor = e.select("a")[-1]
+                    if not anchor.has_attr("href"):
+                        continue
+
+                    name_element = next(e.children)
+                    if not isinstance(name_element, NavigableString):
+                        continue
+
+                    attachments.append({
+                        "name": name_element.string,
+                        "url": f"{DOMAIN}{anchor['href']}",
+                    })
+
+            if isinstance(message_section, Tag):
+                message_section.extract()
+                content_section.insert(0, message_section)
+
+            content_section.insert(0, heading_element)
+            content += "\n" + str(preprocess.clean_html(str(content_section)))
+
+        dto = {"info": {"content": content}, "attachments": attachments}
+        return SupportDTO(**dto)
