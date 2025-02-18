@@ -10,13 +10,11 @@ class NoticeContainer(containers.DeclarativeContainer):
 
     notice_repo = providers.Singleton(repo.NoticeRepository)
     notice_embedder = providers.Singleton(notice.NoticeEmbedder)
-    notice_crawler = providers.Singleton(notice.NoticeCrawler)
 
     notice_service = providers.Factory(
-        notice.NoticeServiceBase,
+        notice.NoticeService,
         notice_repo=notice_repo,
         notice_embedder=notice_embedder,
-        notice_crawler=notice_crawler,
         university_repo=univ_repo,
         semester_repo=semester_repo,
     )

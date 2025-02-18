@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 
 import db.repositories as repo
-from services import calendar
+from services import university
 
 
 class CalendarContainer(containers.DeclarativeContainer):
@@ -10,7 +10,7 @@ class CalendarContainer(containers.DeclarativeContainer):
     semester_repo = providers.Dependency(repo.SemesterRepository)
 
     calendar_service = providers.Factory(
-        calendar.CalendarService,
+        university.CalendarService,
         calendar_repo=calendar_repo,
-        semester_repo=semester_repo
+        semester_repo=semester_repo,
     )

@@ -3,6 +3,7 @@ from dependency_injector import containers, providers
 import db.repositories as repo
 from services import professor
 
+
 class ProfessorContainer(containers.DeclarativeContainer):
     univ_repo = providers.Dependency(repo.UniversityRepository)
 
@@ -12,8 +13,8 @@ class ProfessorContainer(containers.DeclarativeContainer):
 
     professor_service = providers.Factory(
         professor.ProfessorService,
-        professor_repo = professor_repo,
-        professor_embedder = professor_embedder,
-        professor_crawler = professor_crawler,
-        university_repo = univ_repo
+        professor_repo=professor_repo,
+        professor_embedder=professor_embedder,
+        professor_crawler=professor_crawler,
+        univ_repo=univ_repo
     )
