@@ -4,20 +4,18 @@ from pgvector.sqlalchemy import SparseVector
 
 from db.common import V_DIM
 from db.models import AttachmentModel, NoticeChunkModel, NoticeModel
-from db.models.calendar import SemesterModel
 from db.models.university import DepartmentModel
 from db.repositories import NoticeRepository
 
 from db.repositories.base import transaction
 from db.repositories.calendar import SemesterRepository
 from db.repositories.university import UniversityRepository
-from services.base import BaseService
 
 from services.base.embedder import embed
+from services.base.service import BaseDomainService
 from services.base.types.calendar import DateRangeType, SemesterType
 from services.notice.dto import NoticeDTO
 from services.notice.embedder import NoticeEmbedder
-from services.notice.crawler.base import NoticeCrawlerBase
 
 logger = logging.getLogger(__name__)
 
@@ -29,19 +27,17 @@ class SearchOptions(TypedDict, total=False):
     departments: Required[List[str]]
 
 
-class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
+class NoticeService(BaseDomainService[NoticeDTO, NoticeModel]):
 
     def __init__(
         self,
         notice_repo: NoticeRepository,
         notice_embedder: NoticeEmbedder,
-        notice_crawler: NoticeCrawlerBase,
         university_repo: UniversityRepository,
         semester_repo: Optional[SemesterRepository] = None
     ):
         self.notice_repo = notice_repo
         self.notice_embedder = notice_embedder
-        self.notice_crawler = notice_crawler
         self.university_repo = university_repo
         self.semester_repo = semester_repo
 
@@ -51,9 +47,7 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
 
     def _parse_attachments(self, dto):
         attachments = dto.get("attachments")
-        return {
-            "attachments": [AttachmentModel(**att) for att in attachments]
-        } if attachments else {}
+        return {"attachments": [AttachmentModel(**att) for att in attachments]} if attachments else {}
 
     def _parse_embeddings(self, dto):
         embeddings = dto.get("embeddings")
@@ -81,9 +75,7 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
         assert type(department_model) is DepartmentModel
         del info["department"]
 
-        return NoticeModel(
-            **info, **attachments, **embeddings, url=dto["url"], department_id=department_model.id
-        )
+        return NoticeModel(**info, **attachments, **embeddings, url=dto["url"], department_id=department_model.id)
 
     def orm2dto(self, orm: NoticeModel) -> NoticeDTO:
         attachments = [{"name": att.name, "url": att.url} for att in orm.attachments]
@@ -162,8 +154,7 @@ class NoticeServiceBase(BaseService[NoticeDTO, NoticeModel]):
 
             from tqdm import tqdm
             pbar = tqdm(
-                range(0, total_records, batch_size),
-                desc=f"학기 정보 추가({semester_model.year}-{semester_model.type_})"
+                range(0, total_records, batch_size), desc=f"학기 정보 추가({semester_model.year}-{semester_model.type_})"
             )
             for offset in pbar:
                 notices = self.notice_repo.update_semester(semester_model, batch_size, offset)

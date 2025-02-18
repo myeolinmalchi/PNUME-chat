@@ -1,8 +1,11 @@
 from abc import abstractmethod, ABC
-from typing import Generic, List, NotRequired, TypeVar, TypedDict
+from typing import Generic, List, NotRequired, Optional, TypeVar, TypedDict
 
-DTO = TypeVar("DTO")
-ORM = TypeVar("ORM")
+from db.common import Base
+from mixins.http_client import HTTPMetaclass
+from services.base.dto import DTO
+
+ORM = TypeVar("ORM", bound=Base)
 
 
 class CrawlingParams(TypedDict):
@@ -12,13 +15,23 @@ class CrawlingParams(TypedDict):
     with_embeddings: NotRequired[bool]
 
 
-class BaseService(Generic[DTO, ORM]):
+class BaseService(ABC):
+    pass
 
-    def dto2orm(self, dto: DTO) -> ORM:
-        raise NotImplementedError()
 
-    def orm2dto(self, orm: ORM) -> DTO:
-        raise NotImplementedError()
+class BaseDomainService(Generic[DTO, ORM], BaseService):
 
-        raise NotImplementedError()
+    @abstractmethod
+    def dto2orm(self, dto: DTO) -> Optional[ORM]:
+        pass
+
+    @abstractmethod
+    def orm2dto(self, orm: ORM) -> Optional[DTO]:
+        pass
+
+
+class BaseCrawlerService(BaseDomainService[DTO, ORM], metaclass=HTTPMetaclass):
+
+    @abstractmethod
     async def run_crawling_pipeline(self, **kwargs) -> List[DTO]:
+        pass

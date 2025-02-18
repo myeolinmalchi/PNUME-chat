@@ -1,15 +1,23 @@
+from db.models.notice import NoticeModel
 from db.repositories import transaction
 
 import asyncio
+from services.base.service import BaseCrawlerService
+from services.notice.crawler.me import NoticeMECrawler
 from services.notice.dto import NoticeDTO
-from services.notice.service.base import NoticeServiceBase
+from services.notice.service.base import NoticeService
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class NoticeMEService(NoticeServiceBase):
+# TODO: 크롤링 로직 수정
+class NoticeMEService(NoticeService, BaseCrawlerService[NoticeDTO, NoticeModel]):
+
+    def __init__(self, notice_crawler: NoticeMECrawler, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.notice_crawler = notice_crawler
 
     @transaction()
     async def run_full_crawling_pipeline_async(self, **kwargs):
@@ -39,22 +47,10 @@ class NoticeMEService(NoticeServiceBase):
             })
 
             _urls = urls[st:ed]
-            dtos = [
-                NoticeDTO(
-                    **{
-                        "url": url,
-                        "info": {
-                            "department": "기계공학부",
-                            "category": url_key
-                        }
-                    }
-                ) for url in _urls
-            ]
-            notices = await self.notice_crawler.scrape_detail_async(dtos)
+            dtos = [NoticeDTO(**{"url": url, "info": {"department": "기계공학부", "category": url_key}}) for url in _urls]
+            notices = await self.notice_crawler.scrape_detail_async(urls[st:ed])
             if kwargs.get('with_embeddings', True):
-                notices = await self.notice_embedder.embed_dtos_batch_async(
-                    items=notices, batch_size=interval
-                )
+                notices = await self.notice_embedder.embed_dtos_batch_async(dtos=notices, batch_size=interval)
 
             notice_models = [self.dto2orm(n) for n in notices]
             notice_models = [n for n in notice_models if n]

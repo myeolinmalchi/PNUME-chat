@@ -6,8 +6,10 @@ from db.models.notice import NoticeModel
 from db.repositories import transaction
 
 import asyncio
+from services.base.service import BaseCrawlerService
+from services.notice.crawler.default import NoticeCrawler
 from services.notice.dto import NoticeDTO, NoticeInfoDTO
-from services.notice.service.base import NoticeServiceBase
+from services.notice.service.base import NoticeService
 from config.logger import _logger
 
 import logging
@@ -15,7 +17,11 @@ import logging
 logger = _logger(__name__)
 
 
-class NoticeService(NoticeServiceBase):
+class NoticeCrawlerService(NoticeService, BaseCrawlerService[NoticeDTO, NoticeModel]):
+
+    def __init__(self, notice_crawler: NoticeCrawler, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.notice_crawler = notice_crawler
 
     @transaction()
     async def run_crawling_pipeline(self, **kwargs):
@@ -51,9 +57,7 @@ class NoticeService(NoticeServiceBase):
                             raise ValueError(f"잘못된 url입니다: {last_notice.url}")
                         last_id = int(last_path.split("/")[4])
 
-                urls = await self.notice_crawler.scrape_urls_async(
-                    url=url, rows=rows, last_id=last_id
-                )
+                urls = await self.notice_crawler.scrape_urls_async(url=url, rows=rows, last_id=last_id)
 
                 with tqdm(total=len(urls), desc=f"[{department}-{category}]") as pbar:
                     for st in range(0, len(urls), interval):
