@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import List
+from services.base.crawler.crawler import BaseCrawler
 from services.professor import ProfessorDTO
-from services.base.crawler import BaseCrawler
 
 EDU_KEYWORDS = {
     "학사": ["학사", "학부", "B.S", "BS"],

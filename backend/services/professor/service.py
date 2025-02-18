@@ -7,6 +7,7 @@ from db.models.professor import ProfessorDetailChunkModel
 from db.repositories import transaction, ProfessorRepository, UniversityRepository
 
 from services.base import BaseService
+from services.base.service import BaseDomainService
 from services.professor.embedder import ProfessorEmbedder
 from services.professor.crawler import ProfessorCrawlerBase
 from services.professor.dto import ProfessorDTO
@@ -17,7 +18,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class ProfessorService(BaseService[ProfessorDTO, ProfessorModel]):
+class ProfessorService(BaseDomainService[ProfessorDTO, ProfessorModel]):
 
     def __init__(
         self, professor_repo: ProfessorRepository, professor_embedder: ProfessorEmbedder,

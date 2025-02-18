@@ -3,7 +3,6 @@ from typing import List
 from bs4 import BeautifulSoup
 from services.professor.crawler.base import ProfessorCrawlerBase
 from urllib3.util import parse_url
-import asyncio
 
 from markdownify import markdownify as md
 

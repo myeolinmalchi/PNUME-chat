@@ -6,11 +6,13 @@ import json
 from config.logger import _logger
 import asyncio
 
+from tqdm import tqdm
+
 logger = _logger(__name__)
 
 
 # TODO: 로직 정상화
-class SupportCrawlingService(SupportService, BaseCrawlerService[SupportDTO, SupportModel]):
+class SupportCrawlerService(SupportService, BaseCrawlerService[SupportDTO, SupportModel]):
 
     async def run_crawling_pipeline(self, **kwargs):
         with open("config/onestop.json", "r") as f:
