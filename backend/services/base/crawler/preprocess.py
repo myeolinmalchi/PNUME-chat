@@ -76,7 +76,7 @@ def _clean_html_tag(soup: BeautifulSoup, element: Tag) -> int:
     children = list(element.children)
     only_string = all(isinstance(child, NavigableString) for child in children)
 
-    for attr in element.attrs:
+    for attr in [*element.attrs.keys()]:
         if attr in UNUSED_ATTRS:
             del element[attr]
 
