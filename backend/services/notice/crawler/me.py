@@ -3,11 +3,10 @@ from typing import List
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 
+from services.base import BaseCrawler
 from services.notice import NoticeDTO
 
 import re
-
-from services.notice.crawler.base import NoticeCrawlerBase
 
 URLs = {
     "공지/학부": {
@@ -61,7 +60,7 @@ DOMAIN = "https://me.pusan.ac.kr"
 DEPARTMENT = "기계공학부"
 
 
-class NoticeMECrawler(NoticeCrawlerBase):
+class NoticeMECrawler(BaseCrawler[NoticeDTO]):
 
     def scrape_urls(self, **kwargs) -> List[str]:
         """게시글 url 목록 불러오기"""
@@ -73,7 +72,7 @@ class NoticeMECrawler(NoticeCrawlerBase):
 
         url = f"{DOMAIN}{URLs[url_key]['path']}"
 
-        soup = self._scrape(url)
+        soup = scrape(url)
         seq = self._parse_last_seq(soup)
 
         path = URLs[url_key]["path"]

@@ -2,8 +2,7 @@ from typing import Callable, List
 from aiohttp import ClientSession
 
 from bs4 import BeautifulSoup
-from services.base.crawler.crawler import ParseHTMLException
-from services.notice.crawler.base import NoticeCrawlerBase
+from services.base.crawler.crawler import BaseCrawler, ParseHTMLException
 from urllib3.util import parse_url
 
 from services.base.crawler import scrape, preprocess
@@ -52,8 +51,7 @@ def _parse_paths(soup: BeautifulSoup) -> ParseHTMLException | List[str]:
 
 
 async def _fetch_total_pages(
-    index_url: str, batch_size: int, rows: int, filter: Callable[[str], bool],
-    session: ClientSession
+    index_url: str, batch_size: int, rows: int, filter: Callable[[str], bool], session: ClientSession
 ):
     """전체 게시글 경로 추출"""
 
@@ -61,9 +59,7 @@ async def _fetch_total_pages(
     st, ed = 0, batch_size
     while True:
         urls = [f"{index_url}?row={rows}&page={page + 1}" for page in range(st, ed)]
-        results = await scrape.scrape_async(
-            url=urls, session=session, post_process=_parse_paths, delay_range=(1, 2)
-        )
+        results = await scrape.scrape_async(url=urls, session=session, post_process=_parse_paths, delay_range=(1, 2))
         paths: List[str] = []
         errors: List[Exception] = []
         for result in results:
@@ -85,7 +81,7 @@ async def _fetch_total_pages(
     return total_paths
 
 
-class NoticeCrawler(NoticeCrawlerBase):
+class NoticeCrawler(BaseCrawler[NoticeDTO]):
 
     async def scrape_urls_async(self, **kwargs) -> List[str]:
         """공지 리스트에서 각 게시글 url 추출"""
@@ -104,11 +100,7 @@ class NoticeCrawler(NoticeCrawlerBase):
 
         last_id: int | None = kwargs.get("last_id")
         paths = await _fetch_total_pages(
-            url,
-            batch_size,
-            rows,
-            filter=lambda path: _compare_path(path, last_id),
-            session=session
+            url, batch_size, rows, filter=lambda path: _compare_path(path, last_id), session=session
         )
 
         return [f"{_url.scheme}://{_url.netloc}{path}" for path in paths]
