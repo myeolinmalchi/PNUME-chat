@@ -6,18 +6,17 @@ from db.repositories.base import transaction
 from db.repositories.professor import ProfessorRepository
 from db.repositories.subject import CourseRepository, SubjectRepository
 from db.repositories.university import UniversityRepository
-from services.base.service import BaseService
+from services.base.service import BaseDomainService, BaseService
 
 from datetime import datetime, timedelta
 import re
 import pandas as pd
 
 
-class CourseService(BaseService[Any, CourseModel]):
+class CourseService():
 
     def __init__(
-        self, professor_repo: ProfessorRepository,
-        subject_repo: SubjectRepository, univ_repo: UniversityRepository,
+        self, professor_repo: ProfessorRepository, subject_repo: SubjectRepository, univ_repo: UniversityRepository,
         course_repo: CourseRepository
     ):
         self.professor_repo = professor_repo
@@ -47,10 +46,7 @@ class CourseService(BaseService[Any, CourseModel]):
 
     def parse_classroom(self, raw: str):
         building, classroom = raw.split("-", 1)
-        return {
-            "building": building,
-            "classroom": classroom
-        }
+        return {"building": building, "classroom": classroom}
 
     def parse_timetable(self, timetable_str: str):
         infos = timetable_str.split(" ")
@@ -61,12 +57,7 @@ class CourseService(BaseService[Any, CourseModel]):
         weekday, time_str, classroom = infos
         st_time, ed_time = self.parse_time(time_str)
 
-        return {
-            "weekday": weekday,
-            "st_time": st_time,
-            "ed_time": ed_time,
-            **self.parse_classroom(classroom)
-        }
+        return {"weekday": weekday, "st_time": st_time, "ed_time": ed_time, **self.parse_classroom(classroom)}
 
     def parse_timetables(self, raw: str):
 
@@ -128,9 +119,7 @@ class CourseService(BaseService[Any, CourseModel]):
         )
 
     @transaction()
-    def preprocess(
-        self, row: pd.Series, cache_dict: Dict[Tuple[str, str], Tuple[int, int]]
-    ):
+    def preprocess(self, row: pd.Series, cache_dict: Dict[Tuple[str, str], Tuple[int, int]]):
 
         row_dict = {
             "subject_name": self.parse_subject(str(row["교과목명"])),
@@ -150,49 +139,32 @@ class CourseService(BaseService[Any, CourseModel]):
         professor_name = self.parse_professor(str(row["교수명"]))
 
         if (department, professor_name) in cache_dict:
-            department_id, professor_id = cache_dict[
-                (department, professor_name)]
-            return pd.Series({
-                **row_dict, "department_id": department_id,
-                "professor_id": professor_id
-            })
+            department_id, professor_id = cache_dict[(department, professor_name)]
+            return pd.Series({**row_dict, "department_id": department_id, "professor_id": professor_id})
 
         department_model = self.univ_repo.find_department_by_name(department)
 
         if not department_model:
             cache_dict[(department, professor_name)] = (-1, -1)
-            return pd.Series({
-                **row_dict, "professor_id": -1,
-                "department_id": -1
-            })
+            return pd.Series({**row_dict, "professor_id": -1, "department_id": -1})
 
         assert type(department_model) is DepartmentModel
         department_id = department_model.id
 
-        professor_model = self.professor_repo.find(
-            department_id=department_id, name=professor_name
-        )
-        professor_id = -1 if len(professor_model
-                                 ) == 0 else professor_model[0].id
+        professor_model = self.professor_repo.find(department_id=department_id, name=professor_name)
+        professor_id = -1 if len(professor_model) == 0 else professor_model[0].id
         cache_dict[(department, professor_name)] = (department_id, professor_id)
 
-        return pd.Series({
-            **row_dict, "department_id": department_id,
-            "professor_id": professor_id
-        })
+        return pd.Series({**row_dict, "department_id": department_id, "professor_id": professor_id})
 
     @transaction()
     def run(self):
         df = pd.read_csv("config/courses.csv")
         cache_dict: Dict[Tuple[str, str], Tuple[int, int]] = {}
         df = df.apply(lambda row: self.preprocess(row, cache_dict), axis=1)
-        course_dicts = df.to_dict(orient="records")  # type: ignore
+        course_dicts = df.to_dict(orient="records") # type: ignore
 
-        df = df.groupby(["subject_name", "subject_code", "department_id"],
-                        as_index=False).first()
-        subject_dicts = df.to_dict(orient='records')  # type: ignore
+        df = df.groupby(["subject_name", "subject_code", "department_id"], as_index=False).first()
+        subject_dicts = df.to_dict(orient='records') # type: ignore
         subject_dicts = [self.subject2orm(s) for s in subject_dicts]
-        subject_dicts = {
-            (s.department_id, s.code): s
-            for s in subject_dicts
-        }
+        subject_dicts = {(s.department_id, s.code): s for s in subject_dicts}
