@@ -1,4 +1,5 @@
-from bs4 import BeautifulSoup, NavigableString, PageElement, Tag
+from bs4 import BeautifulSoup, Tag
+from bs4.element import NavigableString, PageElement
 from config.logger import _logger
 
 logger = _logger(__name__)
@@ -32,8 +33,7 @@ def clean_html(html: str | BeautifulSoup) -> BeautifulSoup:
 
     while True:
         affected = sum([
-            _clean_html_tag(soup, child)
-            if isinstance(child, Tag) else _clean_html_string(soup, child)
+            _clean_html_tag(soup, child) if isinstance(child, Tag) else _clean_html_string(soup, child)
             for child in list(soup.descendants)
         ])
 
@@ -86,8 +86,7 @@ def _clean_html_tag(soup: BeautifulSoup, element: Tag) -> int:
             element.replace_with(target)
             return affected + 1
         case Tag(
-            name="span" | "p" | "u" | "b" | "strong",
-            parent=Tag(name="span" | "p" | "td" | "li" | "td" | "th" | "b")
+            name="span" | "p" | "u" | "b" | "strong", parent=Tag(name="span" | "p" | "td" | "li" | "td" | "th" | "b")
         ):
             if not only_string:
                 return affected
