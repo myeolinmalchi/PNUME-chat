@@ -14,21 +14,54 @@ import asyncio
 from typing import Dict
 
 from config.config import get_universities
+from containers.crawler.notice import NoticeCrawlerContainer
+from containers.notice import NoticeContainer
 from db.repositories import transaction
 import logging
 
-from services.notice import create_notice_service
 from services.notice.crawler.me import URLs as ME_URLs
 
 import logging
 
 import warnings
 
+from services.notice.service.default import NoticeCrawlerService
+from services.notice.service.me import NoticeMECrawlerService
+
 warnings.filterwarnings("ignore")
 
+from dependency_injector.wiring import Provide, inject
 
+
+def init_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--interval", dest="interval", action="store", default="10")
+    parser.add_argument("-d", "--delay", dest="delay", action="store", default="0")
+    parser.add_argument("-dp", "--department", dest="department", action="store", default="ALL")
+    parser.add_argument("-r", '--reset', dest="reset", action=argparse.BooleanOptionalAction)
+    parser.add_argument("-rw", '--rows', dest="rows", action="store", default="500")
+
+    args = parser.parse_args()
+
+    kwargs = {
+        "interval": int(args.interval),
+        "delay": float(args.delay),
+        "reset": bool(args.reset),
+        "department": str(args.department),
+        "rows": int(args.rows)
+    }
+
+    return kwargs
+
+
+@inject
 @transaction()
-async def main(**kwargs):
+async def main(
+    notice_service: NoticeCrawlerService = Provide[NoticeCrawlerContainer.notice_service],
+    notice_me_service: NoticeMECrawlerService = Provide[NoticeCrawlerContainer.notice_me_service]
+):
+
+    kwargs = init_args()
 
     try:
         from itertools import chain
@@ -36,12 +69,10 @@ async def main(**kwargs):
         univs = get_universities()
         department = kwargs.get("department")
         departments = [[dep for dep in deps] for deps in univs.values()]
-        departments = list(chain(*departments)
-                           ) if department == "ALL" else [department]
+        departments = list(chain(*departments)) if department == "ALL" else [department]
 
         _type = "me" if department == "기계공학부" else "default"
 
-        notice_service = create_notice_service(_type)
         reset = kwargs.get("reset", False)
         rows = kwargs.get("rows", 500)
 
@@ -49,7 +80,7 @@ async def main(**kwargs):
             failed_departments: Dict = {}
             for deps in departments:
                 try:
-                    await notice_service.run_full_crawling_pipeline_async(
+                    await notice_service.run_crawling_pipeline(
                         interval=kwargs.get('interval'),
                         delay=kwargs.get('delay'),
                         with_embeddings=True,
@@ -68,7 +99,7 @@ async def main(**kwargs):
         elif _type == "me":
             for url_key in ME_URLs:
                 try:
-                    await notice_service.run_full_crawling_pipeline_async(
+                    await notice_me_service.run_crawling_pipeline(
                         interval=kwargs.get('interval'),
                         delay=kwargs.get('delay'),
                         url_key=url_key,
@@ -84,31 +115,8 @@ async def main(**kwargs):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-i", "--interval", dest="interval", action="store", default="10"
-    )
-    parser.add_argument(
-        "-d", "--delay", dest="delay", action="store", default="0"
-    )
-    parser.add_argument(
-        "-dp", "--department", dest="department", action="store", default="ALL"
-    )
-    parser.add_argument(
-        "-r", '--reset', dest="reset", action=argparse.BooleanOptionalAction
-    )
-    parser.add_argument(
-        "-rw", '--rows', dest="rows", action="store", default="500"
-    )
+    notice_container = NoticeCrawlerContainer()
+    notice_container.init_resources()
+    notice_container.wire(modules=[__name__])
 
-    args = parser.parse_args()
-
-    kwargs = {
-        "interval": int(args.interval),
-        "delay": float(args.delay),
-        "reset": bool(args.reset),
-        "department": str(args.department),
-        "rows": int(args.rows)
-    }
-
-    asyncio.run(main(**kwargs))
+    asyncio.run(main())
