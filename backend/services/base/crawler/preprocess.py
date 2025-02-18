@@ -55,6 +55,16 @@ def _clean_html_string(soup: BeautifulSoup, element: PageElement) -> int:
     return 0
 
 
+UNUSED_ATTRS = [
+    "class", "style", "id", "title", "tabindex", "role", "hidden", "aria-hidden", "aria-expanded", "aria-controls",
+    "aria-label", "aria-labelledby", "aria-describedby", "data-toggle", "data-target", "data-dismiss", "data-parent",
+    "draggable", "spellcheck", "translate", "contenteditable", "autocapitalize", "autocorrect", "autocomplete", "dir",
+    "lang", "accesskey", "contextmenu", "ondrag", "ondragstart", "ondragend", "ondragover", "ondragleave", "ondrop",
+    "onmouseover", "onmouseout", "onmouseenter", "onmouseleave", "onclick", "ondblclick", "onmousedown", "onmouseup",
+    "onmousemove", "onwheel", "onkeydown", "onkeyup", "onkeypress", "onfocus", "onblur", "oninput", "onchange"
+]
+
+
 def _clean_html_tag(soup: BeautifulSoup, element: Tag) -> int:
     """Clean `Tag` instance"""
 
@@ -65,6 +75,10 @@ def _clean_html_tag(soup: BeautifulSoup, element: Tag) -> int:
 
     children = list(element.children)
     only_string = all(isinstance(child, NavigableString) for child in children)
+
+    for attr in element.attrs:
+        if attr in UNUSED_ATTRS:
+            del element[attr]
 
     if only_string and len(children) > 1:
         inner_texts = [child.text for child in children]
